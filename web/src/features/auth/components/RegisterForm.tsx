@@ -1,4 +1,114 @@
+import { useState } from 'react';
+import {
+  validateEmail,
+  validatePassword,
+  validatePasswordConfirmation,
+  validatePhone,
+  validateUsername,
+} from '../registerValidation';
+
+type RegisterField =
+  'username' | 'email' | 'phone' | 'password' | 'passwordConfirmation';
+
+type RegisterValues = Record<RegisterField, string>;
+type RegisterErrors = Partial<Record<RegisterField, string>>;
+
+const initialValues: RegisterValues = {
+  username: '',
+  email: '',
+  phone: '',
+  password: '',
+  passwordConfirmation: '',
+};
+
+function getFieldError(
+  field: RegisterField,
+  values: RegisterValues,
+): string | undefined {
+  switch (field) {
+    case 'username':
+      return validateUsername(values.username);
+    case 'email':
+      return validateEmail(values.email);
+    case 'phone':
+      return validatePhone(values.phone);
+    case 'password':
+      return validatePassword(values.password);
+    case 'passwordConfirmation':
+      return validatePasswordConfirmation(
+        values.passwordConfirmation,
+        values.password,
+      );
+  }
+}
+
+function withFieldError(
+  errors: RegisterErrors,
+  field: RegisterField,
+  error: string | undefined,
+): RegisterErrors {
+  const nextErrors = { ...errors };
+
+  if (error) {
+    nextErrors[field] = error;
+  } else {
+    delete nextErrors[field];
+  }
+
+  return nextErrors;
+}
+
 export default function RegisterForm() {
+  const [values, setValues] = useState(initialValues);
+  const [errors, setErrors] = useState<RegisterErrors>({});
+
+  function handleChange(field: RegisterField, value: string) {
+    const nextValues = { ...values, [field]: value };
+    setValues(nextValues);
+
+    setErrors((currentErrors) => {
+      const fieldsToValidate: RegisterField[] = [];
+
+      if (currentErrors[field]) {
+        fieldsToValidate.push(field);
+      }
+
+      if (field === 'password' && currentErrors.passwordConfirmation) {
+        fieldsToValidate.push('passwordConfirmation');
+      }
+
+      if (fieldsToValidate.length === 0) {
+        return currentErrors;
+      }
+
+      return fieldsToValidate.reduce(
+        (nextErrors, fieldToValidate) =>
+          withFieldError(
+            nextErrors,
+            fieldToValidate,
+            getFieldError(fieldToValidate, nextValues),
+          ),
+        currentErrors,
+      );
+    });
+  }
+
+  function handleBlur(field: RegisterField) {
+    setErrors((currentErrors) =>
+      withFieldError(currentErrors, field, getFieldError(field, values)),
+    );
+  }
+
+  function handleSubmit() {
+    const nextErrors = (Object.keys(values) as RegisterField[]).reduce(
+      (currentErrors, field) =>
+        withFieldError(currentErrors, field, getFieldError(field, values)),
+      {} as RegisterErrors,
+    );
+
+    setErrors(nextErrors);
+  }
+
   return (
     <>
       <p className="register-brand">tripshare</p>
@@ -47,7 +157,10 @@ export default function RegisterForm() {
       <form
         className="register-form"
         noValidate
-        onSubmit={(event) => event.preventDefault()}
+        onSubmit={(event) => {
+          event.preventDefault();
+          handleSubmit();
+        }}
       >
         <div className="register-form__fields">
           <div className="register-field">
@@ -61,7 +174,22 @@ export default function RegisterForm() {
               type="text"
               autoComplete="username"
               placeholder="Escolha um nome de usuário"
+              required
+              aria-invalid={Boolean(errors.username)}
+              aria-describedby={errors.username ? 'username-error' : undefined}
+              value={values.username}
+              onChange={(event) => handleChange('username', event.target.value)}
+              onBlur={() => handleBlur('username')}
             />
+            {errors.username && (
+              <p
+                className="register-field__error"
+                id="username-error"
+                role="alert"
+              >
+                {errors.username}
+              </p>
+            )}
           </div>
 
           <div className="register-field">
@@ -75,7 +203,22 @@ export default function RegisterForm() {
               type="email"
               autoComplete="email"
               placeholder="seu@email.com"
+              required
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={errors.email ? 'email-error' : undefined}
+              value={values.email}
+              onChange={(event) => handleChange('email', event.target.value)}
+              onBlur={() => handleBlur('email')}
             />
+            {errors.email && (
+              <p
+                className="register-field__error"
+                id="email-error"
+                role="alert"
+              >
+                {errors.email}
+              </p>
+            )}
           </div>
 
           <div className="register-field">
@@ -89,7 +232,22 @@ export default function RegisterForm() {
               type="tel"
               autoComplete="tel"
               placeholder="(00) 00000-0000"
+              required
+              aria-invalid={Boolean(errors.phone)}
+              aria-describedby={errors.phone ? 'phone-error' : undefined}
+              value={values.phone}
+              onChange={(event) => handleChange('phone', event.target.value)}
+              onBlur={() => handleBlur('phone')}
             />
+            {errors.phone && (
+              <p
+                className="register-field__error"
+                id="phone-error"
+                role="alert"
+              >
+                {errors.phone}
+              </p>
+            )}
           </div>
 
           <div className="register-field">
@@ -103,7 +261,22 @@ export default function RegisterForm() {
               type="password"
               autoComplete="new-password"
               placeholder="Mínimo 8 caracteres e 1 símbolo"
+              required
+              aria-invalid={Boolean(errors.password)}
+              aria-describedby={errors.password ? 'password-error' : undefined}
+              value={values.password}
+              onChange={(event) => handleChange('password', event.target.value)}
+              onBlur={() => handleBlur('password')}
             />
+            {errors.password && (
+              <p
+                className="register-field__error"
+                id="password-error"
+                role="alert"
+              >
+                {errors.password}
+              </p>
+            )}
           </div>
 
           <div className="register-field">
@@ -120,7 +293,28 @@ export default function RegisterForm() {
               type="password"
               autoComplete="new-password"
               placeholder="Repita sua senha"
+              required
+              aria-invalid={Boolean(errors.passwordConfirmation)}
+              aria-describedby={
+                errors.passwordConfirmation
+                  ? 'password-confirmation-error'
+                  : undefined
+              }
+              value={values.passwordConfirmation}
+              onChange={(event) =>
+                handleChange('passwordConfirmation', event.target.value)
+              }
+              onBlur={() => handleBlur('passwordConfirmation')}
             />
+            {errors.passwordConfirmation && (
+              <p
+                className="register-field__error"
+                id="password-confirmation-error"
+                role="alert"
+              >
+                {errors.passwordConfirmation}
+              </p>
+            )}
           </div>
         </div>
 

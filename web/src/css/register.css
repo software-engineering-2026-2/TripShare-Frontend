@@ -182,6 +182,26 @@
   box-shadow: 0 0 0 3px rgba(9, 9, 11, 0.12);
 }
 
+.register-field__input[aria-invalid='true'] {
+  background: #fef2f2;
+  border-color: #dc2626;
+}
+
+.register-field__input[aria-invalid='true']:hover {
+  border-color: #b91c1c;
+}
+
+.register-field__input[aria-invalid='true']:focus {
+  border-color: #b91c1c;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
+.register-field__error {
+  color: #b91c1c;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
 .register-form__submit {
   width: 100%;
   height: 49px;
