@@ -123,7 +123,7 @@ export default function RegisterForm() {
       </header>
 
       <div className="register-social">
-        <button className="register-google" type="button">
+        <button className="form-button register-google" type="button">
           <svg
             aria-hidden="true"
             focusable="false"
@@ -168,7 +168,7 @@ export default function RegisterForm() {
               Nome de usuário
             </label>
             <input
-              className="register-field__input"
+              className="form-control register-field__input"
               id="username"
               name="username"
               type="text"
@@ -197,7 +197,7 @@ export default function RegisterForm() {
               E-mail
             </label>
             <input
-              className="register-field__input"
+              className="form-control register-field__input"
               id="email"
               name="email"
               type="email"
@@ -226,7 +226,7 @@ export default function RegisterForm() {
               Telefone
             </label>
             <input
-              className="register-field__input"
+              className="form-control register-field__input"
               id="phone"
               name="phone"
               type="tel"
@@ -255,7 +255,7 @@ export default function RegisterForm() {
               Senha
             </label>
             <input
-              className="register-field__input"
+              className="form-control register-field__input"
               id="password"
               name="password"
               type="password"
@@ -287,7 +287,7 @@ export default function RegisterForm() {
               Confirmação de senha
             </label>
             <input
-              className="register-field__input"
+              className="form-control register-field__input"
               id="password-confirmation"
               name="passwordConfirmation"
               type="password"
@@ -318,7 +318,7 @@ export default function RegisterForm() {
           </div>
         </div>
 
-        <button className="register-form__submit" type="submit">
+        <button className="form-button register-form__submit" type="submit">
           Cadastrar
         </button>
       </form>
