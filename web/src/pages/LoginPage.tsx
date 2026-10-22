@@ -3,7 +3,6 @@ import LoginForm from '../features/auth/components/LoginForm';
 import '../css/login.css';
 // import { login, getCurrentUserProfile } from '../services/authService';
 import { login } from '../services/authService';
-import { auth } from '../lib/firebase';
 
 export default function LoginPage() {
   async function handleLogin(email: string, password: string) {
