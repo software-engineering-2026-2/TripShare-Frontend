@@ -6,6 +6,7 @@ import {
   validatePhone,
   validateUsername,
 } from '../registerValidation';
+import EmailAlreadyRegisteredNotice from './EmailAlreadyRegisteredNotice';
 
 type RegisterField =
   'username' | 'email' | 'phone' | 'password' | 'passwordConfirmation';
@@ -61,8 +62,12 @@ function withFieldError(
 export default function RegisterForm() {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState<RegisterErrors>({});
+  const [emailAlreadyRegistered, setEmailAlreadyRegistered] = useState(false);
 
   function handleChange(field: RegisterField, value: string) {
+    if (field === 'email') {
+     setEmailAlreadyRegistered(false);
+   }
     const nextValues = { ...values, [field]: value };
     setValues(nextValues);
 
@@ -107,6 +112,8 @@ export default function RegisterForm() {
     );
 
     setErrors(nextErrors);
+    // TODO: quando POST /auth/register retornar e-mail já cadastrado,
+    // chamar setEmailAlreadyRegistered(true)
   }
 
   return (
@@ -204,8 +211,8 @@ export default function RegisterForm() {
               autoComplete="email"
               placeholder="seu@email.com"
               required
-              aria-invalid={Boolean(errors.email)}
-              aria-describedby={errors.email ? 'email-error' : undefined}
+              aria-invalid={Boolean(errors.email) || emailAlreadyRegistered}
+              aria-describedby={errors.email || emailAlreadyRegistered ? 'email-error' : undefined}
               value={values.email}
               onChange={(event) => handleChange('email', event.target.value)}
               onBlur={() => handleBlur('email')}
@@ -218,6 +225,9 @@ export default function RegisterForm() {
               >
                 {errors.email}
               </p>
+            )}
+            {emailAlreadyRegistered && !errors.email && (
+              <EmailAlreadyRegisteredNotice />
             )}
           </div>
 
