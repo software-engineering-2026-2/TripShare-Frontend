@@ -1,6 +1,12 @@
-import { useState } from 'react';
+import { FirebaseError } from 'firebase/app';
+import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { ApiError } from '../../../services/api';
+import { register, type RegisterProfileInput } from '../../../services/authService';
 import {
   validateEmail,
+  validateName,
   validatePassword,
   validatePasswordConfirmation,
   validatePhone,
@@ -8,17 +14,27 @@ import {
 } from '../registerValidation';
 
 type RegisterField =
-  'username' | 'email' | 'phone' | 'password' | 'passwordConfirmation';
+  | 'username'
+  | 'name'
+  | 'email'
+  | 'phone'
+  | 'password'
+  | 'passwordConfirmation'
+  | 'bio'
+  | 'hometown';
 
 type RegisterValues = Record<RegisterField, string>;
 type RegisterErrors = Partial<Record<RegisterField, string>>;
 
 const initialValues: RegisterValues = {
   username: '',
+  name: '',
   email: '',
   phone: '',
   password: '',
   passwordConfirmation: '',
+  bio: '',
+  hometown: '',
 };
 
 function getFieldError(
@@ -28,6 +44,8 @@ function getFieldError(
   switch (field) {
     case 'username':
       return validateUsername(values.username);
+    case 'name':
+      return validateName(values.name);
     case 'email':
       return validateEmail(values.email);
     case 'phone':
@@ -39,6 +57,9 @@ function getFieldError(
         values.passwordConfirmation,
         values.password,
       );
+    case 'bio':
+    case 'hometown':
+      return undefined;
   }
 }
 
@@ -58,9 +79,84 @@ function withFieldError(
   return nextErrors;
 }
 
+function buildProfileInput(values: RegisterValues): RegisterProfileInput {
+  const profile: RegisterProfileInput = {
+    username: values.username.trim(),
+    name: values.name.trim(),
+  };
+
+  const phone = values.phone.trim();
+  const bio = values.bio.trim();
+  const hometown = values.hometown.trim();
+
+  if (phone) {
+    profile.phone = phone;
+  }
+
+  if (bio) {
+    profile.bio = bio;
+  }
+
+  if (hometown) {
+    profile.hometown = hometown;
+  }
+
+  return profile;
+}
+
+function getSubmitErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 400) {
+      return 'Dados inválidos. Revise os campos e tente novamente.';
+    }
+
+    if (error.status === 401) {
+      return 'Não foi possível validar sua autenticação. Tente novamente.';
+    }
+
+    if (error.status === 409) {
+      return 'Este nome de usuário já está em uso ou esta conta já foi cadastrada.';
+    }
+
+    return 'Não foi possível concluir o cadastro. Tente novamente.';
+  }
+
+  if (error instanceof FirebaseError) {
+    if (error.code === 'auth/invalid-email') {
+      return 'Informe um e-mail válido.';
+    }
+
+    if (error.code === 'auth/weak-password') {
+      return 'A senha é muito fraca. Escolha uma senha mais forte.';
+    }
+
+    if (
+      error.code === 'auth/invalid-credential' ||
+      error.code === 'auth/wrong-password'
+    ) {
+      return 'Este e-mail já está cadastrado. Faça login ou use outro e-mail.';
+    }
+
+    if (error.code === 'auth/network-request-failed') {
+      return 'Falha de conexão. Verifique sua internet e tente novamente.';
+    }
+
+    return 'Não foi possível criar a conta. Tente novamente.';
+  }
+
+  if (error instanceof TypeError) {
+    return 'Falha de conexão. Verifique sua internet e tente novamente.';
+  }
+
+  return 'Não foi possível concluir o cadastro. Tente novamente.';
+}
+
 export default function RegisterForm() {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState<RegisterErrors>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   function handleChange(field: RegisterField, value: string) {
     const nextValues = { ...values, [field]: value };
@@ -99,7 +195,13 @@ export default function RegisterForm() {
     );
   }
 
-  function handleSubmit() {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
+
     const nextErrors = (Object.keys(values) as RegisterField[]).reduce(
       (currentErrors, field) =>
         withFieldError(currentErrors, field, getFieldError(field, values)),
@@ -107,6 +209,22 @@ export default function RegisterForm() {
     );
 
     setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
+    setSubmitError(null);
+    setIsSubmitting(true);
+
+    try {
+      await register(values.email.trim(), values.password, buildProfileInput(values));
+      navigate('/login');
+    } catch (error) {
+      setSubmitError(getSubmitErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -158,8 +276,7 @@ export default function RegisterForm() {
         className="register-form"
         noValidate
         onSubmit={(event) => {
-          event.preventDefault();
-          handleSubmit();
+          void handleSubmit(event);
         }}
       >
         <div className="register-form__fields">
@@ -174,6 +291,7 @@ export default function RegisterForm() {
               type="text"
               autoComplete="username"
               placeholder="Escolha um nome de usuário"
+              maxLength={50}
               required
               aria-invalid={Boolean(errors.username)}
               aria-describedby={errors.username ? 'username-error' : undefined}
@@ -188,6 +306,32 @@ export default function RegisterForm() {
                 role="alert"
               >
                 {errors.username}
+              </p>
+            )}
+          </div>
+
+          <div className="register-field">
+            <label className="register-field__label" htmlFor="name">
+              Nome completo
+            </label>
+            <input
+              className="form-control register-field__input"
+              id="name"
+              name="name"
+              type="text"
+              autoComplete="name"
+              placeholder="Seu nome completo"
+              maxLength={120}
+              required
+              aria-invalid={Boolean(errors.name)}
+              aria-describedby={errors.name ? 'name-error' : undefined}
+              value={values.name}
+              onChange={(event) => handleChange('name', event.target.value)}
+              onBlur={() => handleBlur('name')}
+            />
+            {errors.name && (
+              <p className="register-field__error" id="name-error" role="alert">
+                {errors.name}
               </p>
             )}
           </div>
@@ -223,7 +367,7 @@ export default function RegisterForm() {
 
           <div className="register-field">
             <label className="register-field__label" htmlFor="phone">
-              Telefone
+              Telefone (opcional)
             </label>
             <input
               className="form-control register-field__input"
@@ -232,7 +376,7 @@ export default function RegisterForm() {
               type="tel"
               autoComplete="tel"
               placeholder="(00) 00000-0000"
-              required
+              maxLength={32}
               aria-invalid={Boolean(errors.phone)}
               aria-describedby={errors.phone ? 'phone-error' : undefined}
               value={values.phone}
@@ -316,10 +460,72 @@ export default function RegisterForm() {
               </p>
             )}
           </div>
+
+          <div className="register-field">
+            <label className="register-field__label" htmlFor="bio">
+              Bio (opcional)
+            </label>
+            <textarea
+              className="form-control register-field__input register-field__textarea"
+              id="bio"
+              name="bio"
+              rows={3}
+              autoComplete="off"
+              placeholder="Conte um pouco sobre você"
+              aria-invalid={Boolean(errors.bio)}
+              aria-describedby={errors.bio ? 'bio-error' : undefined}
+              value={values.bio}
+              onChange={(event) => handleChange('bio', event.target.value)}
+            />
+            {errors.bio && (
+              <p className="register-field__error" id="bio-error" role="alert">
+                {errors.bio}
+              </p>
+            )}
+          </div>
+
+          <div className="register-field">
+            <label className="register-field__label" htmlFor="hometown">
+              Cidade natal (opcional)
+            </label>
+            <input
+              className="form-control register-field__input"
+              id="hometown"
+              name="hometown"
+              type="text"
+              autoComplete="off"
+              placeholder="Ex.: Campina Grande, PB"
+              aria-invalid={Boolean(errors.hometown)}
+              aria-describedby={
+                errors.hometown ? 'hometown-error' : undefined
+              }
+              value={values.hometown}
+              onChange={(event) => handleChange('hometown', event.target.value)}
+            />
+            {errors.hometown && (
+              <p
+                className="register-field__error"
+                id="hometown-error"
+                role="alert"
+              >
+                {errors.hometown}
+              </p>
+            )}
+          </div>
         </div>
 
-        <button className="form-button register-form__submit" type="submit">
-          Cadastrar
+        {submitError && (
+          <p className="register-form__error" role="alert">
+            {submitError}
+          </p>
+        )}
+
+        <button
+          className="form-button register-form__submit"
+          type="submit"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Cadastrando...' : 'Cadastrar'}
         </button>
       </form>
     </>
