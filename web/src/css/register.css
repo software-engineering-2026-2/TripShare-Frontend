@@ -6,8 +6,8 @@
 }
 
 .register-page {
-  --register-backdrop: #18181b14;
-  --register-card-shadow: 0 24px 60px -32px #09090b59;
+  --register-backdrop: #0077b614;
+  --register-card-shadow: 0 24px 60px -32px #0a254059;
 
   min-height: 100svh;
   display: flex;

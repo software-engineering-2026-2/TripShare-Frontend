@@ -1,22 +1,22 @@
 :root {
-  --color-primary: #09090b;
-  --color-primary-hover: #18181b;
-  --color-text: var(--color-primary);
-  --color-text-muted: #09090b99;
-  --color-text-placeholder: #09090b80;
+  --color-primary: #0077b6;
+  --color-primary-hover: #023e8a;
+  --color-text: #0a2540;
+  --color-text-muted: #4a6b82;
+  --color-text-placeholder: #4a6b82;
   --color-surface: #ffffff;
-  --color-surface-muted: #f4f4f5;
+  --color-surface-muted: #ebf5f8;
   --color-on-primary: var(--color-surface);
-  --color-border: #e4e4e7;
-  --color-border-hover: #d4d4d8;
-  --color-border-strong: #a1a1aa;
-  --color-danger: #b91c1c;
-  --color-danger-border: #dc2626;
-  --color-danger-bg: #fef2f2;
-  --color-focus-ring: #09090b1f;
-  --color-focus-ring-soft: #09090b2e;
-  --color-focus-ring-strong: #09090b59;
-  --color-danger-ring: #dc262626;
+  --color-border: #d8e8f0;
+  --color-border-hover: #c5dce8;
+  --color-border-strong: #c5dce8;
+  --color-danger: #c13515;
+  --color-danger-border: #c13515;
+  --color-danger-bg: #c1351514;
+  --color-focus-ring: #0077b61f;
+  --color-focus-ring-soft: #0077b62e;
+  --color-focus-ring-strong: #0077b659;
+  --color-danger-ring: #c1351526;
 
   --text: var(--color-text-muted);
   --text-h: var(--color-text);
