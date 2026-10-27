@@ -43,9 +43,9 @@ export async function logout() {
     return;
   }
 
-  const token = await user.getIdToken();
-
   try {
+    const token = await user.getIdToken();
+
     await request<void>('/auth/logout', {
       method: 'POST',
       headers: {
