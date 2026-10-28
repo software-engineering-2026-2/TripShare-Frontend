@@ -1,15 +1,18 @@
 
 import LoginForm from '../features/auth/components/LoginForm';
 import '../css/login.css';
+// import { login, getCurrentUserProfile } from '../services/authService';
+import { login } from '../services/authService';
 
 export default function LoginPage() {
   async function handleLogin(email: string, password: string) {
-    // A integração com POST /auth/login será implementada na próxima etapa.
-    // Não armazenamos credenciais nem simulamos um login bem-sucedido.
-    void email;
-    void password;
+    await login(email, password);
+    //await getCurrentUserProfile();
 
-    throw new Error('Autenticação ainda não implementada.');
+    //console.log(
+    //'Usuário autenticado:',
+    //auth.currentUser?.email,
+    //);
   }
 
   return (
