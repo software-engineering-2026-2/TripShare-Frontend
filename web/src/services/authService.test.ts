@@ -20,7 +20,7 @@ vi.mock('firebase/auth', () => ({
   signOut: signOutMock,
 }));
 
-import { register } from './authService';
+import { logout, register } from './authService';
 
 const profile = {
   username: 'joaosilva',
@@ -44,6 +44,10 @@ function createFirebaseUser() {
   return {
     getIdToken: vi.fn().mockResolvedValue('firebase-id-token'),
   };
+}
+
+function setCurrentUser(user: unknown) {
+  Object.assign(authMock, { currentUser: user });
 }
 
 function mockFetchResponse(
@@ -222,5 +226,60 @@ describe('register', () => {
       'senha123!',
     );
     expect(result).toEqual(backendUser);
+  });
+});
+
+describe('logout', () => {
+  beforeEach(() => {
+    setCurrentUser(null);
+  });
+
+  it('envia o token para /auth/logout e encerra a sessão Firebase', async () => {
+    const firebaseUser = createFirebaseUser();
+    setCurrentUser(firebaseUser);
+    mockFetchResponse(fetchMock, { ok: true, status: 204 });
+
+    await logout();
+
+    expect(firebaseUser.getIdToken).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/auth/logout'),
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          Authorization: 'Bearer firebase-id-token',
+        }),
+      }),
+    );
+    expect(signOutMock).toHaveBeenCalledWith(authMock);
+  });
+
+  it('encerra a sessão Firebase quando o backend responde 401', async () => {
+    setCurrentUser(createFirebaseUser());
+    mockFetchResponse(fetchMock, {
+      ok: false,
+      status: 401,
+      json: { message: 'unauthorized' },
+    });
+
+    await expect(logout()).rejects.toThrow();
+    expect(signOutMock).toHaveBeenCalledWith(authMock);
+  });
+
+  it('encerra a sessão Firebase quando não consegue obter o token', async () => {
+    setCurrentUser({
+      getIdToken: vi.fn().mockRejectedValue(new Error('token expirado')),
+    });
+
+    await expect(logout()).rejects.toThrow('token expirado');
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(signOutMock).toHaveBeenCalledWith(authMock);
+  });
+
+  it('não chama o backend quando não há usuário autenticado', async () => {
+    await logout();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(signOutMock).not.toHaveBeenCalled();
   });
 });
