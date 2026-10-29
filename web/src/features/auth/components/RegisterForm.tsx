@@ -12,6 +12,7 @@ import {
   validatePhone,
   validateUsername,
 } from '../registerValidation';
+import EmailAlreadyRegisteredNotice from './EmailAlreadyRegisteredNotice';
 
 type RegisterField =
   | 'username'
@@ -154,11 +155,15 @@ function getSubmitErrorMessage(error: unknown): string {
 export default function RegisterForm() {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState<RegisterErrors>({});
+  const [emailAlreadyRegistered, setEmailAlreadyRegistered] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   function handleChange(field: RegisterField, value: string) {
+    if (field === 'email') {
+     setEmailAlreadyRegistered(false);
+   }
     const nextValues = { ...values, [field]: value };
     setValues(nextValues);
 
@@ -221,6 +226,8 @@ export default function RegisterForm() {
       await register(values.email.trim(), values.password, buildProfileInput(values));
       navigate('/login');
     } catch (error) {
+      // TODO: quando POST /auth/register retornar e-mail já cadastrado,
+      // chamar setEmailAlreadyRegistered(true)
       setSubmitError(getSubmitErrorMessage(error));
     } finally {
       setIsSubmitting(false);
@@ -348,8 +355,8 @@ export default function RegisterForm() {
               autoComplete="email"
               placeholder="seu@email.com"
               required
-              aria-invalid={Boolean(errors.email)}
-              aria-describedby={errors.email ? 'email-error' : undefined}
+              aria-invalid={Boolean(errors.email) || emailAlreadyRegistered}
+              aria-describedby={errors.email || emailAlreadyRegistered ? 'email-error' : undefined}
               value={values.email}
               onChange={(event) => handleChange('email', event.target.value)}
               onBlur={() => handleBlur('email')}
@@ -362,6 +369,9 @@ export default function RegisterForm() {
               >
                 {errors.email}
               </p>
+            )}
+            {emailAlreadyRegistered && !errors.email && (
+              <EmailAlreadyRegisteredNotice />
             )}
           </div>
 
