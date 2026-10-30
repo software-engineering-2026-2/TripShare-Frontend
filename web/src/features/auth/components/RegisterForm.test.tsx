@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '../../../services/api';
@@ -11,7 +12,14 @@ vi.mock('../../../services/authService', () => ({
   register: vi.fn(),
 }));
 
+vi.mock('react-hot-toast', () => ({
+  default: {
+    success: vi.fn(),
+  },
+}));
+
 const registerMock = vi.mocked(register);
+const toastSuccessMock = vi.mocked(toast.success);
 
 const userProfile: UserProfile = {
   id: 'b3f1c0de-4a2e-4c1b-9d57-0e8f6a1c2d34',
@@ -55,6 +63,7 @@ afterEach(cleanup);
 
 beforeEach(() => {
   registerMock.mockReset();
+  toastSuccessMock.mockReset();
 });
 
 describe('RegisterForm', () => {
@@ -77,6 +86,7 @@ describe('RegisterForm', () => {
     );
     expect(screen.queryByText('Informe seu telefone.')).not.toBeInTheDocument();
     expect(registerMock).not.toHaveBeenCalled();
+    expect(toastSuccessMock).not.toHaveBeenCalled();
   });
 
   it('exibe erro de nome de usuário acima de 50 caracteres', async () => {
@@ -172,7 +182,7 @@ describe('RegisterForm', () => {
     expect(phoneInput).toHaveAttribute('aria-invalid', 'false');
   });
 
-  it('envia o payload correto sem campos opcionais vazios e navega para /login', async () => {
+  it('envia o payload correto sem campos opcionais vazios, exibe a confirmação e navega para /login', async () => {
     registerMock.mockResolvedValue(userProfile);
     const user = userEvent.setup();
     renderRegisterForm();
@@ -189,6 +199,10 @@ describe('RegisterForm', () => {
       username: 'ana',
       name: 'Ana Silva',
     });
+    expect(toastSuccessMock).toHaveBeenCalledWith(
+      'Cadastro realizado com sucesso!', 
+      {duration: 5000},
+    );
     expect(await screen.findByText('Página de login')).toBeInTheDocument();
   });
 
@@ -228,6 +242,7 @@ describe('RegisterForm', () => {
       'Gosto de viagens',
     );
     expect(screen.getByRole('button', { name: 'Cadastrar' })).toBeEnabled();
+    expect(toastSuccessMock).not.toHaveBeenCalled();
   });
 
   it('exibe mensagem amigável para erro 400', async () => {
