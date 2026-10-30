@@ -1,8 +1,6 @@
 import { useState, type FormEvent } from 'react';
 
-import { ApiError } from '../../../services/api';
-import type { UserProfile } from '../../../services/authService';
-import type { UpdateProfileInput } from '../../../services/usersService';
+import type { EditableProfile, UpdateProfileInput } from '../profileTypes';
 import {
   PROFILE_LIMITS,
   validateProfileBio,
@@ -17,12 +15,15 @@ type ProfileValues = Record<ProfileField, string>;
 type ProfileErrors = Partial<Record<ProfileField, string>>;
 
 interface EditProfileFormProps {
-  profile: UserProfile;
-  onSubmit: (input: UpdateProfileInput) => Promise<UserProfile>;
+  profile: EditableProfile;
+  onSubmit: (input: UpdateProfileInput) => Promise<EditableProfile>;
   onCancel: () => void;
 }
 
-function toValues(profile: UserProfile): ProfileValues {
+const SUBMIT_ERROR_MESSAGE =
+  'Não foi possível salvar o perfil. Tente novamente.';
+
+function toValues(profile: EditableProfile): ProfileValues {
   return {
     name: profile.name ?? '',
     phone: profile.phone ?? '',
@@ -72,22 +73,6 @@ function buildUpdate(
   }
 
   return update;
-}
-
-function getSubmitErrorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    if (error.status === 400) {
-      return 'Dados inválidos. Revise os campos e tente novamente.';
-    }
-
-    if (error.status === 401) {
-      return 'Sua sessão expirou. Entre novamente para editar o perfil.';
-    }
-
-    return 'Não foi possível salvar o perfil. Tente novamente.';
-  }
-
-  return 'Não foi possível salvar o perfil. Verifique sua conexão e tente novamente.';
 }
 
 export default function EditProfileForm({
@@ -161,8 +146,8 @@ export default function EditProfileForm({
       setValues(updatedValues);
       setBaseline(updatedValues);
       setSuccessMessage('Perfil atualizado com sucesso.');
-    } catch (error) {
-      setSubmitError(getSubmitErrorMessage(error));
+    } catch {
+      setSubmitError(SUBMIT_ERROR_MESSAGE);
     } finally {
       setIsSubmitting(false);
     }

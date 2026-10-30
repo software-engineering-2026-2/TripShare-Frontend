@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import type { PublicProfile } from '../../../services/usersService';
+import type { PublicProfile } from '../profileTypes';
 
 interface PublicProfileHeaderProps {
   profile: PublicProfile;
