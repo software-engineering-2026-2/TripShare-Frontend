@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import PublicProfileHeader from '../features/profile/components/PublicProfileHeader';
 import PublicationsSection from '../features/profile/components/PublicationsSection';
 import { useCurrentUserProfile } from '../features/profile/useCurrentUserProfile';
@@ -42,14 +42,37 @@ export default function PublicProfilePage() {
     <main className="public-profile-page">
       <div className="public-profile__container">
         {isPending && (
-          <p className="public-profile__status" role="status">
-            Carregando perfil...
-          </p>
+          <div className="public-profile__state">
+            <span className="public-profile__spinner" aria-hidden="true" />
+            <p className="public-profile__status" role="status">
+              Carregando perfil...
+            </p>
+          </div>
         )}
 
         {isError && (
-          <div className="public-profile__status" role="alert">
-            <p>{getErrorMessage(error)}</p>
+          <div className="public-profile__state" role="alert">
+            <span className="public-profile__state-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path
+                  d="M12 8v5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+                <circle cx="12" cy="16.5" r="1.1" fill="currentColor" />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="8.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                />
+              </svg>
+            </span>
+            <p className="public-profile__status">{getErrorMessage(error)}</p>
             {canRetry && (
               <button
                 className="form-button public-profile__retry"
@@ -63,20 +86,13 @@ export default function PublicProfilePage() {
         )}
 
         {profile && (
-          <article className="public-profile__content">
-            {isOwnProfile && (
-              <div className="public-profile__actions">
-                <Link
-                  className="form-button public-profile__edit-button"
-                  to={`/perfil/${id}/editar`}
-                >
-                  Editar perfil
-                </Link>
-              </div>
-            )}
-            <PublicProfileHeader profile={profile} />
+          <div className="public-profile__content">
+            <PublicProfileHeader
+              profile={profile}
+              editHref={isOwnProfile ? `/perfil/${id}/editar` : undefined}
+            />
             <PublicationsSection publications={[]} />
-          </article>
+          </div>
         )}
       </div>
     </main>
