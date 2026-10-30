@@ -110,10 +110,10 @@ export async function getIdToken() {
   return user.getIdToken();
 }
 
-export async function getCurrentUserProfile() {
+export async function getCurrentUserProfile(): Promise<UserProfile> {
   const token = await getIdToken();
 
-  return request('/auth/me', {
+  return request<UserProfile>('/auth/me', {
     headers: {
       Authorization: `Bearer ${token}`,
     },
