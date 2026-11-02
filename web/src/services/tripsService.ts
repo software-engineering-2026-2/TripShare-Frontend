@@ -3,6 +3,7 @@ import {
   mockCreateTrip,
   mockGetTrips,
   mockSearchDestinations,
+  mockUpdateTrip,
 } from './tripsMock';
 
 // Remover junto com tripsMock.ts quando o back-end estiver pronto.
@@ -26,6 +27,8 @@ export interface Trip {
 
 export type CreateTripInput = Omit<Trip, 'id'>;
 
+export type UpdateTripInput = CreateTripInput;
+
 export function getTrips(): Promise<Trip[]> {
   if (USE_MOCKS) return mockGetTrips();
   return request<Trip[]>('/trips');
@@ -35,6 +38,15 @@ export function createTrip(input: CreateTripInput): Promise<Trip> {
   if (USE_MOCKS) return mockCreateTrip(input);
   return request<Trip>('/trips', {
     method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+// O back-end (branch RF-05) espera destinationId, startsOn e endsOn; ajustar o corpo quando os tipos vierem do OpenAPI.
+export function updateTrip(id: string, input: UpdateTripInput): Promise<Trip> {
+  if (USE_MOCKS) return mockUpdateTrip(id, input);
+  return request<Trip>(`/trips/${id}`, {
+    method: 'PATCH',
     body: JSON.stringify(input),
   });
 }
