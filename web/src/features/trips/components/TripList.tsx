@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { Trip } from '../../../services/tripsService';
 import {
   formatDayCount,
@@ -59,6 +60,15 @@ export default function TripList({
           <p className="trip-card__info">
             {formatDayCount(getTripDays(trip.startDate, trip.endDate))}
           </p>
+          <div className="trip-card__footer">
+            <Link
+              className="form-button my-trips__secondary-button trip-card__explore-link"
+              to={`/minhas-viagens/${trip.id}`}
+              aria-label={`Explorar viagem ${trip.title}`}
+            >
+              Explorar viagem
+            </Link>
+          </div>
         </li>
       ))}
     </ul>

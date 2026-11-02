@@ -146,6 +146,20 @@
   font-size: 15px;
 }
 
+.trip-card__footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+.trip-card__explore-link {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 14px;
+  text-decoration: none;
+}
+
 .trip-list__empty {
   display: flex;
   flex-direction: column;

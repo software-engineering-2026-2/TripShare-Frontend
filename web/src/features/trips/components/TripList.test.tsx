@@ -1,5 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Trip } from '../../../services/tripsService';
 import TripList from './TripList';
@@ -23,18 +24,32 @@ const trips: Trip[] = [
   },
 ];
 
+function renderTripList(onEditTrip = vi.fn()) {
+  render(
+    <MemoryRouter>
+      <TripList trips={trips} onNewTrip={vi.fn()} onEditTrip={onEditTrip} />
+    </MemoryRouter>,
+  );
+}
+
 describe('TripList', () => {
   it('abre a edição da viagem escolhida pelo botão do card', async () => {
     const user = userEvent.setup();
     const onEditTrip = vi.fn();
-    render(
-      <TripList trips={trips} onNewTrip={vi.fn()} onEditTrip={onEditTrip} />,
-    );
+    renderTripList(onEditTrip);
 
     await user.click(
       screen.getByRole('button', { name: 'Editar viagem Mochilão na Europa' }),
     );
 
     expect(onEditTrip).toHaveBeenCalledWith(trips[1]);
+  });
+
+  it('leva para a tela da viagem pelo botão Explorar viagem', () => {
+    renderTripList();
+
+    expect(
+      screen.getByRole('link', { name: 'Explorar viagem Férias de verão' }),
+    ).toHaveAttribute('href', '/minhas-viagens/1');
   });
 });
