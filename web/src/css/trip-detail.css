@@ -1,0 +1,523 @@
+.trip-detail-page,
+.trip-detail-page *,
+.trip-detail-page *::before,
+.trip-detail-page *::after {
+  box-sizing: border-box;
+}
+
+.trip-detail-page {
+  --trip-detail-shadow: 0 1px 3px #09090b14;
+  --trip-detail-float-shadow: 0 2px 10px #09090b1f;
+
+  min-height: 100svh;
+  width: 100%;
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  color-scheme: light;
+  font-family: var(--sans);
+  text-align: left;
+}
+
+/* Cores por turno, usadas na linha do tempo, nos pinos e nas rotas do mapa. */
+.time-of-day--morning {
+  --time-color: #f5b301;
+  --time-on-color: #3d2c00;
+  --time-bg: #fff5d1;
+  --time-title: #6b4d00;
+}
+
+.time-of-day--afternoon {
+  --time-color: #f2711c;
+  --time-on-color: #ffffff;
+  --time-bg: #ffe7d6;
+  --time-title: #8a3407;
+}
+
+.time-of-day--evening {
+  --time-color: #38bdf8;
+  --time-on-color: #06304a;
+  --time-bg: #e0f2fe;
+  --time-title: #075985;
+}
+
+.time-of-day--night {
+  --time-color: #7c3aed;
+  --time-on-color: #ffffff;
+  --time-bg: #ede4ff;
+  --time-title: #4c1d95;
+}
+
+.trip-detail__container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 20px 32px;
+}
+
+.trip-detail__back-link {
+  color: var(--color-primary);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.trip-detail__back-link:hover {
+  text-decoration: underline;
+}
+
+.trip-detail__status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 24px;
+  color: var(--color-text-muted);
+  font-size: 16px;
+}
+
+.trip-detail__header {
+  margin: 16px 0 20px;
+}
+
+.trip-detail__title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+
+.trip-detail__subtitle {
+  margin-top: 4px;
+  color: var(--color-text-muted);
+  font-size: 16px;
+}
+
+.trip-detail__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px 20px;
+  text-align: center;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: 16px;
+}
+
+.trip-detail__empty-title {
+  color: var(--color-text);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.trip-detail__empty-text {
+  color: var(--color-text-muted);
+  font-size: 15px;
+}
+
+.trip-detail__days {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding-bottom: 4px;
+  overflow-x: auto;
+}
+
+.trip-detail__day-button {
+  flex-shrink: 0;
+  padding: 6px 16px;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.trip-detail__day-button:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+
+.trip-detail__day-button[aria-pressed='true'] {
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.trip-detail__day-button:focus-visible,
+.trip-map__zoom-button:focus-visible {
+  outline: 3px solid var(--color-focus-ring-strong);
+  outline-offset: 2px;
+}
+
+.trip-detail__content {
+  display: grid;
+  grid-template-columns: minmax(340px, 460px) 1fr;
+  gap: 16px;
+}
+
+.trip-detail__panel {
+  padding: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+}
+
+.trip-detail__panel-title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.trip-detail__panel-subtitle {
+  margin: 2px 0 16px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.trip-detail__day-empty {
+  padding: 24px;
+  color: var(--color-text-muted);
+  font-size: 15px;
+  text-align: center;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: 12px;
+}
+
+.trip-detail__map {
+  position: sticky;
+  top: 16px;
+  min-height: 520px;
+  max-height: calc(100svh - 32px);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+}
+
+.day-itinerary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.day-itinerary__endpoint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.day-itinerary__endpoint-label {
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.day-itinerary__endpoint-detail {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.day-itinerary__endpoint-time {
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-itinerary__group {
+  padding: 12px;
+  background: var(--time-bg);
+  border-radius: 16px;
+}
+
+.day-itinerary__group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+  padding: 0 4px;
+}
+
+.day-itinerary__group-title {
+  margin: 0;
+  color: var(--time-title);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.day-itinerary__group-range {
+  color: var(--time-title);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+.day-itinerary__list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.day-itinerary__travel {
+  padding: 6px 0 6px 44px;
+  color: var(--time-title);
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.day-itinerary__card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: var(--color-surface);
+  border-radius: 12px;
+  box-shadow: var(--trip-detail-shadow);
+}
+
+.day-itinerary__number {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: var(--time-on-color);
+  background: var(--time-color);
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.day-itinerary__time {
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-itinerary__name {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.day-itinerary__details {
+  margin-top: 2px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.day-itinerary__tag {
+  display: inline-block;
+  margin: 8px 6px 0 0;
+  padding: 2px 8px;
+  color: var(--color-text);
+  background: var(--color-surface-muted);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.day-itinerary__tag--warning {
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
+}
+
+.trip-map {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #f3efe6;
+}
+
+.trip-map__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.trip-map__moving {
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rio-map__fade {
+  transition: opacity 500ms;
+}
+
+.trip-map__route-casing,
+.trip-map__route {
+  fill: none;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.trip-map__route-casing {
+  stroke: #ffffff;
+  stroke-width: 8px;
+  opacity: 0.8;
+}
+
+.trip-map__route {
+  stroke: var(--time-color);
+  stroke-opacity: 0.6;
+  stroke-width: 5px;
+}
+
+.trip-map__arrow {
+  fill: var(--time-color);
+  stroke: #ffffff;
+  stroke-width: 1.2px;
+}
+
+.trip-map__lodging {
+  fill: #222222;
+  stroke: #ffffff;
+  stroke-width: 2.5px;
+}
+
+.trip-map__lodging-icon {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 1.8px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.trip-map__pin-circle {
+  fill: var(--time-color);
+  stroke: #ffffff;
+  stroke-width: 3px;
+}
+
+.trip-map__pin-number {
+  fill: var(--time-on-color);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.trip-map__top {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  left: 12px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.trip-map__badge,
+.trip-map__zoom,
+.trip-map__legend {
+  background: var(--color-surface);
+  border-radius: 14px;
+  box-shadow: var(--trip-detail-float-shadow);
+  pointer-events: auto;
+}
+
+.trip-map__badge {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 14px;
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.trip-map__badge-hint {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.trip-map__zoom {
+  display: flex;
+  overflow: hidden;
+}
+
+.trip-map__zoom-button {
+  padding: 8px 14px;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.trip-map__zoom-button[aria-pressed='true'] {
+  color: var(--color-on-primary);
+  background: var(--color-text);
+}
+
+.trip-map__legend {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 8px 14px;
+  list-style: none;
+}
+
+.trip-map__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.trip-map__legend-dot {
+  width: 10px;
+  height: 10px;
+  background: var(--time-color);
+  border-radius: 50%;
+}
+
+@media (max-width: 900px) {
+  .trip-detail__content {
+    grid-template-columns: 1fr;
+  }
+
+  .trip-detail__map {
+    position: relative;
+    top: 0;
+    order: -1;
+    min-height: 360px;
+    height: 50svh;
+  }
+}
+
+@media (max-width: 640px) {
+  .trip-detail__container {
+    padding: 20px 12px;
+  }
+
+  .trip-detail__title {
+    font-size: 28px;
+  }
+}
