@@ -1,12 +1,4 @@
-// Estrutura visual da seção de publicações. O back-end ainda não expõe um
-// endpoint para listar publicações de um usuário; a página passa uma lista
-// vazia até o contrato existir, sem exibir dados fictícios.
-export interface ProfilePublication {
-  id: string;
-  title: string;
-  summary?: string;
-  imageUrl?: string;
-}
+import type { ProfilePublication } from '../profileTypes';
 
 interface PublicationsSectionProps {
   publications: ProfilePublication[];

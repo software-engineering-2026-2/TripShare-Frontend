@@ -84,10 +84,7 @@ export default function PublicProfileHeader({
             <p className="public-profile__username">@{profile.username}</p>
 
             {profile.hometown && (
-              <p
-                className="public-profile__hometown"
-                aria-label={`Cidade natal: ${profile.hometown}`}
-              >
+              <p className="public-profile__hometown">
                 <svg
                   className="public-profile__icon"
                   viewBox="0 0 24 24"
@@ -110,6 +107,9 @@ export default function PublicProfileHeader({
                     strokeWidth="1.7"
                   />
                 </svg>
+                <span className="public-profile__sr-only">
+                  Cidade de origem:{' '}
+                </span>
                 {profile.hometown}
               </p>
             )}

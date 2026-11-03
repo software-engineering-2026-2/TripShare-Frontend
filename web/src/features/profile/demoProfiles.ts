@@ -5,8 +5,8 @@ import type { EditableProfile, PublicProfile } from './profileTypes';
 export const DEMO_CURRENT_USER_ID = 'ana-souza';
 
 export const demoProfiles: Record<string, PublicProfile> = {
-  'ana-souza': {
-    id: 'ana-souza',
+  [DEMO_CURRENT_USER_ID]: {
+    id: DEMO_CURRENT_USER_ID,
     username: 'ana.souza',
     name: 'Ana Souza',
     bio: 'Viajo pelo Brasil em busca de praias, cafés e trilhas.',
@@ -21,10 +21,12 @@ export const demoProfiles: Record<string, PublicProfile> = {
   },
 };
 
+const { id, name, bio, hometown } = demoProfiles[DEMO_CURRENT_USER_ID];
+
 export const DEMO_CURRENT_PROFILE: EditableProfile = {
-  id: DEMO_CURRENT_USER_ID,
-  name: 'Ana Souza',
+  id,
+  name,
   phone: '+5583999999999',
-  bio: 'Viajo pelo Brasil em busca de praias, cafés e trilhas.',
-  hometown: 'Campina Grande',
+  bio,
+  hometown,
 };

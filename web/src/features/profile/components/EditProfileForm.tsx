@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type ChangeEvent, type FormEvent } from 'react';
 
 import type { EditableProfile, UpdateProfileInput } from '../profileTypes';
 import {
@@ -9,10 +9,12 @@ import {
   validateProfilePhone,
 } from '../profileValidation';
 
-type ProfileField = 'name' | 'phone' | 'bio' | 'hometown';
-
-type ProfileValues = Record<ProfileField, string>;
-type ProfileErrors = Partial<Record<ProfileField, string>>;
+import {
+  buildUpdate,
+  type ProfileFieldName,
+  type ProfileValues,
+} from '../profileUpdate';
+type ProfileErrors = Partial<Record<ProfileFieldName, string>>;
 
 interface EditProfileFormProps {
   profile: EditableProfile;
@@ -32,47 +34,119 @@ function toValues(profile: EditableProfile): ProfileValues {
   };
 }
 
-function validate(values: ProfileValues): ProfileErrors {
-  return {
-    name: validateProfileName(values.name),
-    phone: validateProfilePhone(values.phone),
-    bio: validateProfileBio(values.bio),
-    hometown: validateProfileHometown(values.hometown),
-  };
+const VALIDATORS: Record<
+  ProfileFieldName,
+  (value: string, baselineValue: string) => string | undefined
+> = {
+  name: validateProfileName,
+  phone: (value, baselineValue) =>
+    baselineValue.trim() && !value.trim()
+      ? 'O telefone cadastrado só pode ser substituído por outro número.'
+      : validateProfilePhone(value),
+  bio: validateProfileBio,
+  hometown: validateProfileHometown,
+};
+
+function validate(
+  values: ProfileValues,
+  baseline: ProfileValues,
+): ProfileErrors {
+  const errors: ProfileErrors = {};
+
+  for (const field of Object.keys(VALIDATORS) as ProfileFieldName[]) {
+    errors[field] = VALIDATORS[field](values[field], baseline[field]);
+  }
+
+  return errors;
 }
 
 function hasErrors(errors: ProfileErrors): boolean {
   return Object.values(errors).some(Boolean);
 }
 
-function buildUpdate(
-  values: ProfileValues,
-  baseline: ProfileValues,
-): UpdateProfileInput {
-  const update: UpdateProfileInput = {};
+interface ProfileFieldProps {
+  field: ProfileFieldName;
+  label: string;
+  placeholder: string;
+  autoComplete: string;
+  type?: 'text' | 'tel';
+  required?: boolean;
+  hint?: string;
+  multiline?: boolean;
+  value: string;
+  error?: string;
+  onChange: (field: ProfileFieldName, value: string) => void;
+  onBlur: (field: ProfileFieldName) => void;
+}
 
-  const name = values.name.trim();
-  const phone = values.phone.trim();
-  const bio = values.bio.trim();
-  const hometown = values.hometown.trim();
+function ProfileField({
+  field,
+  label,
+  placeholder,
+  autoComplete,
+  type = 'text',
+  required,
+  hint,
+  multiline,
+  value,
+  error,
+  onChange,
+  onBlur,
+}: ProfileFieldProps) {
+  const id = `profile-${field}`;
+  const hintId = `${id}-hint`;
+  const errorId = `${id}-error`;
+  const describedBy = [hint && hintId, error && errorId]
+    .filter(Boolean)
+    .join(' ');
+  const controlProps = {
+    id,
+    name: field,
+    maxLength: PROFILE_LIMITS[field],
+    autoComplete,
+    placeholder,
+    required,
+    'aria-invalid': Boolean(error),
+    'aria-describedby': describedBy || undefined,
+    value,
+    onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      onChange(field, event.target.value),
+    onBlur: () => onBlur(field),
+  };
 
-  if (name !== baseline.name.trim()) {
-    update.name = name;
-  }
-
-  if (phone !== baseline.phone.trim()) {
-    update.phone = phone;
-  }
-
-  if (bio !== baseline.bio.trim()) {
-    update.bio = bio;
-  }
-
-  if (hometown !== baseline.hometown.trim()) {
-    update.hometown = hometown;
-  }
-
-  return update;
+  return (
+    <div className="profile-edit__field">
+      <label className="profile-edit__label" htmlFor={id}>
+        {label}
+      </label>
+      {multiline ? (
+        <textarea
+          {...controlProps}
+          className="form-control profile-edit__input profile-edit__textarea"
+          rows={4}
+        />
+      ) : (
+        <input
+          {...controlProps}
+          className="form-control profile-edit__input"
+          type={type}
+        />
+      )}
+      {hint && (
+        <span className="profile-edit__hint" id={hintId}>
+          {hint}
+        </span>
+      )}
+      <span className="profile-edit__counter">
+        {value.trim().length}/{PROFILE_LIMITS[field]}
+      </span>
+      {error && (
+        <p className="profile-edit__error" id={errorId} role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
 }
 
 export default function EditProfileForm({
@@ -86,14 +160,17 @@ export default function EditProfileForm({
   );
   const [errors, setErrors] = useState<ProfileErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{
+    message: string;
+    kind: 'neutral' | 'success';
+  } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleChange(field: ProfileField, value: string) {
+  function handleChange(field: ProfileFieldName, value: string) {
     const nextValues = { ...values, [field]: value };
     setValues(nextValues);
     setSubmitError(null);
-    setSuccessMessage(null);
+    setFeedback(null);
 
     setErrors((currentErrors) => {
       if (!currentErrors[field]) {
@@ -102,15 +179,15 @@ export default function EditProfileForm({
 
       return {
         ...currentErrors,
-        [field]: validate(nextValues)[field],
+        [field]: VALIDATORS[field](value, baseline[field]),
       };
     });
   }
 
-  function handleBlur(field: ProfileField) {
+  function handleBlur(field: ProfileFieldName) {
     setErrors((currentErrors) => ({
       ...currentErrors,
-      [field]: validate(values)[field],
+      [field]: VALIDATORS[field](values[field], baseline[field]),
     }));
   }
 
@@ -121,10 +198,10 @@ export default function EditProfileForm({
       return;
     }
 
-    const nextErrors = validate(values);
+    const nextErrors = validate(values, baseline);
     setErrors(nextErrors);
     setSubmitError(null);
-    setSuccessMessage(null);
+    setFeedback(null);
 
     if (hasErrors(nextErrors)) {
       return;
@@ -133,7 +210,10 @@ export default function EditProfileForm({
     const update = buildUpdate(values, baseline);
 
     if (Object.keys(update).length === 0) {
-      setSuccessMessage('Nenhuma alteração para salvar.');
+      setFeedback({
+        kind: 'neutral',
+        message: 'Nenhuma alteração para salvar.',
+      });
       return;
     }
 
@@ -145,7 +225,10 @@ export default function EditProfileForm({
 
       setValues(updatedValues);
       setBaseline(updatedValues);
-      setSuccessMessage('Perfil atualizado com sucesso.');
+      setFeedback({
+        kind: 'success',
+        message: 'Perfil atualizado com sucesso.',
+      });
     } catch {
       setSubmitError(SUBMIT_ERROR_MESSAGE);
     } finally {
@@ -161,139 +244,51 @@ export default function EditProfileForm({
         void handleSubmit(event);
       }}
     >
-      <div className="profile-edit__field">
-        <label className="profile-edit__label" htmlFor="profile-name">
-          Nome de exibição
-        </label>
-        <input
-          className="form-control profile-edit__input"
-          id="profile-name"
-          name="name"
-          type="text"
-          autoComplete="name"
-          placeholder="Seu nome"
-          required
-          aria-invalid={Boolean(errors.name)}
-          aria-describedby={errors.name ? 'profile-name-error' : undefined}
-          value={values.name}
-          onChange={(event) => handleChange('name', event.target.value)}
-          onBlur={() => handleBlur('name')}
-        />
-        <span className="profile-edit__counter">
-          {values.name.length}/{PROFILE_LIMITS.name}
-        </span>
-        {errors.name && (
-          <p
-            className="profile-edit__error"
-            id="profile-name-error"
-            role="alert"
-          >
-            {errors.name}
-          </p>
-        )}
-      </div>
+      <ProfileField
+        field="name"
+        label="Nome de exibição"
+        placeholder="Seu nome"
+        autoComplete="name"
+        required
+        value={values.name}
+        error={errors.name}
+        onChange={handleChange}
+        onBlur={handleBlur}
+      />
+      <ProfileField
+        field="phone"
+        label={baseline.phone.trim() ? 'Telefone' : 'Telefone (opcional)'}
+        placeholder="+5583999999999"
+        autoComplete="tel"
+        type="tel"
+        hint="Formato internacional E.164, ex.: +5583999999999."
+        value={values.phone}
+        error={errors.phone}
+        onChange={handleChange}
+        onBlur={handleBlur}
+      />
+      <ProfileField
+        field="bio"
+        label="Biografia (opcional)"
+        placeholder="Conte um pouco sobre você"
+        autoComplete="off"
+        multiline
+        value={values.bio}
+        error={errors.bio}
+        onChange={handleChange}
+        onBlur={handleBlur}
+      />
+      <ProfileField
+        field="hometown"
+        label="Cidade de origem (opcional)"
+        placeholder="Ex.: Campina Grande, PB"
+        autoComplete="off"
 
-      <div className="profile-edit__field">
-        <label className="profile-edit__label" htmlFor="profile-phone">
-          Telefone (opcional)
-        </label>
-        <input
-          className="form-control profile-edit__input"
-          id="profile-phone"
-          name="phone"
-          type="tel"
-          autoComplete="tel"
-          placeholder="+5583999999999"
-          aria-invalid={Boolean(errors.phone)}
-          aria-describedby={
-            errors.phone
-              ? 'profile-phone-hint profile-phone-error'
-              : 'profile-phone-hint'
-          }
-          value={values.phone}
-          onChange={(event) => handleChange('phone', event.target.value)}
-          onBlur={() => handleBlur('phone')}
-        />
-        <span className="profile-edit__hint" id="profile-phone-hint">
-          Formato internacional E.164, ex.: +5583999999999.
-        </span>
-        <span className="profile-edit__counter">
-          {values.phone.length}/{PROFILE_LIMITS.phone}
-        </span>
-        {errors.phone && (
-          <p
-            className="profile-edit__error"
-            id="profile-phone-error"
-            role="alert"
-          >
-            {errors.phone}
-          </p>
-        )}
-      </div>
-
-      <div className="profile-edit__field">
-        <label className="profile-edit__label" htmlFor="profile-bio">
-          Biografia (opcional)
-        </label>
-        <textarea
-          className="form-control profile-edit__input profile-edit__textarea"
-          id="profile-bio"
-          name="bio"
-          rows={4}
-          autoComplete="off"
-          placeholder="Conte um pouco sobre você"
-          aria-invalid={Boolean(errors.bio)}
-          aria-describedby={errors.bio ? 'profile-bio-error' : undefined}
-          value={values.bio}
-          onChange={(event) => handleChange('bio', event.target.value)}
-          onBlur={() => handleBlur('bio')}
-        />
-        <span className="profile-edit__counter" aria-live="polite">
-          {values.bio.length}/{PROFILE_LIMITS.bio}
-        </span>
-        {errors.bio && (
-          <p
-            className="profile-edit__error"
-            id="profile-bio-error"
-            role="alert"
-          >
-            {errors.bio}
-          </p>
-        )}
-      </div>
-
-      <div className="profile-edit__field">
-        <label className="profile-edit__label" htmlFor="profile-hometown">
-          Cidade de origem (opcional)
-        </label>
-        <input
-          className="form-control profile-edit__input"
-          id="profile-hometown"
-          name="hometown"
-          type="text"
-          autoComplete="off"
-          placeholder="Ex.: Campina Grande, PB"
-          aria-invalid={Boolean(errors.hometown)}
-          aria-describedby={
-            errors.hometown ? 'profile-hometown-error' : undefined
-          }
-          value={values.hometown}
-          onChange={(event) => handleChange('hometown', event.target.value)}
-          onBlur={() => handleBlur('hometown')}
-        />
-        <span className="profile-edit__counter">
-          {values.hometown.length}/{PROFILE_LIMITS.hometown}
-        </span>
-        {errors.hometown && (
-          <p
-            className="profile-edit__error"
-            id="profile-hometown-error"
-            role="alert"
-          >
-            {errors.hometown}
-          </p>
-        )}
-      </div>
+        value={values.hometown}
+        error={errors.hometown}
+        onChange={handleChange}
+        onBlur={handleBlur}
+      />
 
       {submitError && (
         <p className="profile-edit__error" role="alert">
@@ -301,9 +296,16 @@ export default function EditProfileForm({
         </p>
       )}
 
-      {successMessage && (
-        <p className="profile-edit__success" role="status">
-          {successMessage}
+      {feedback && (
+        <p
+          className={
+            feedback.kind === 'success'
+              ? 'profile-edit__success'
+              : 'profile-edit__hint'
+          }
+          role="status"
+        >
+          {feedback.message}
         </p>
       )}
 

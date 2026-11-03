@@ -24,7 +24,7 @@ export default function PublicProfilePage() {
             <PublicationsSection publications={[]} />
           </div>
         ) : (
-          <div className="public-profile__state" role="alert">
+          <div className="public-profile__state">
             <span className="public-profile__state-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" focusable="false">
                 <path

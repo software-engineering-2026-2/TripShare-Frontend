@@ -18,3 +18,12 @@ export interface EditableProfile {
 export type UpdateProfileInput = Partial<
   Pick<EditableProfile, 'name' | 'phone' | 'bio' | 'hometown'>
 >;
+
+// Formato provisório da interface. Ainda não há endpoint para listar roteiros
+// por usuário, e TripResponse não inclui summary nem imageUrl.
+export interface ProfilePublication {
+  id: string;
+  title: string;
+  summary?: string;
+  imageUrl?: string;
+}
