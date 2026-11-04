@@ -3,12 +3,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from './api';
 
-const { authMock, createUserMock, signInMock, signOutMock } = vi.hoisted(() => ({
-  authMock: { currentUser: null },
-  createUserMock: vi.fn(),
-  signInMock: vi.fn(),
-  signOutMock: vi.fn(),
-}));
+const { authMock, createUserMock, signInMock, signOutMock } = vi.hoisted(
+  () => ({
+    authMock: { currentUser: null, authStateReady: vi.fn() },
+    createUserMock: vi.fn(),
+    signInMock: vi.fn(),
+    signOutMock: vi.fn(),
+  }),
+);
 
 vi.mock('../lib/firebase', () => ({
   auth: authMock,
@@ -20,7 +22,7 @@ vi.mock('firebase/auth', () => ({
   signOut: signOutMock,
 }));
 
-import { logout, register } from './authService';
+import { getIdToken, logout, register } from './authService';
 
 const profile = {
   username: 'joaosilva',
@@ -281,5 +283,24 @@ describe('logout', () => {
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(signOutMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('getIdToken', () => {
+  it('espera o Firebase restaurar a sessão antes de ler o usuário', async () => {
+    const firebaseUser = createFirebaseUser();
+    setCurrentUser(null);
+    authMock.authStateReady.mockImplementationOnce(async () => {
+      setCurrentUser(firebaseUser);
+    });
+
+    await expect(getIdToken()).resolves.toBe('firebase-id-token');
+  });
+
+  it('falha quando não há sessão após a restauração', async () => {
+    setCurrentUser(null);
+    authMock.authStateReady.mockResolvedValueOnce(undefined);
+
+    await expect(getIdToken()).rejects.toThrow('Usuário não autenticado.');
   });
 });
