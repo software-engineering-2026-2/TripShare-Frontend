@@ -1,4 +1,5 @@
 import { request } from './api';
+import { getIdToken } from './authService';
 import {
   mockCreateTrip,
   mockGetTrips,
@@ -8,8 +9,8 @@ import {
 // Remover junto com tripsMock.ts quando o back-end estiver pronto.
 const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true';
 
-// Tipos provisórios: devem ser substituídos pelos gerados a partir do OpenAPI do back-end.
 export interface Destination {
+  id: string;
   city: string;
   region: string;
   country: string;
@@ -26,21 +27,66 @@ export interface Trip {
 
 export type CreateTripInput = Omit<Trip, 'id'>;
 
-export function getTrips(): Promise<Trip[]> {
+// Campos usados de TripResponse do back-end (dto/TripResponse.java).
+interface TripResponse {
+  id: string;
+  destinationId: string;
+  destinationName: string;
+  destinationRegion: string;
+  destinationCountryCode: string;
+  title: string;
+  startsOn: string;
+  endsOn: string;
+}
+
+const countryNames = new Intl.DisplayNames(['pt-BR'], { type: 'region' });
+
+function toTrip(response: TripResponse): Trip {
+  return {
+    id: response.id,
+    title: response.title,
+    destination: {
+      id: response.destinationId,
+      city: response.destinationName,
+      region: response.destinationRegion,
+      country:
+        countryNames.of(response.destinationCountryCode) ??
+        response.destinationCountryCode,
+    },
+    startDate: response.startsOn,
+    endDate: response.endsOn,
+  };
+}
+
+async function authHeaders() {
+  return { Authorization: `Bearer ${await getIdToken()}` };
+}
+
+// GET /trips ainda não existe no back-end: assume que devolve TripResponse[].
+export async function getTrips(): Promise<Trip[]> {
   if (USE_MOCKS) return mockGetTrips();
-  return request<Trip[]>('/trips');
-}
-
-export function createTrip(input: CreateTripInput): Promise<Trip> {
-  if (USE_MOCKS) return mockCreateTrip(input);
-  return request<Trip>('/trips', {
-    method: 'POST',
-    body: JSON.stringify(input),
+  const trips = await request<TripResponse[]>('/trips', {
+    headers: await authHeaders(),
   });
+  return trips.map(toTrip);
 }
 
-// Endpoint ainda não confirmado com o back-end.
+export async function createTrip(input: CreateTripInput): Promise<Trip> {
+  if (USE_MOCKS) return mockCreateTrip(input);
+  const trip = await request<TripResponse>('/trips', {
+    method: 'POST',
+    headers: await authHeaders(),
+    body: JSON.stringify({
+      title: input.title,
+      destinationId: input.destination.id,
+      startsOn: input.startDate,
+      endsOn: input.endDate,
+    }),
+  });
+  return toTrip(trip);
+}
+
+// Back-end ainda não expõe busca de destinos: segue usando o mock.
 export function searchDestinations(query: string): Promise<Destination[]> {
-  if (USE_MOCKS) return mockSearchDestinations(query);
-  return request<Destination[]>(`/destinations?q=${encodeURIComponent(query)}`);
+  return mockSearchDestinations(query);
 }
