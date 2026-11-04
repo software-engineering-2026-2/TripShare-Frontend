@@ -19,7 +19,7 @@ git status --short
 | `task/REF<N>-T<NN>-<descricao-curta>` | Sim. É onde o trabalho das tasks acontece.                           |
 | `chore/...`, `fix/...`, `docs/...`    | Sim, para ajustes fora de uma task (ex.: `chore/ignore-env-file`). Convenção da equipe, não prevista no documento. |
 | `main`                                | **Nunca.** Só recebe PR de `development` ao final da etapa.          |
-| `development`                         | **Não.** Só recebe PR de `REF<N>`.                                   |
+| `development`                         | **Não.** Só recebe PR de `REF<N>` (e das branches `chore/`, `fix/` e `docs/`, pela convenção acima). |
 | `REF<N>` (ex.: `REF01`, `REF02`)      | **Não.** Só recebe PR das branches de task.                          |
 
 Se estiver numa branch protegida, pare e proponha criar a branch da task a partir da `REF<N>` correspondente:
@@ -45,7 +45,7 @@ O `T<NN>` é a posição da subtask dentro do requisito na planilha de tasks (ex
 
 - **Tipo** (obrigatório, minúsculo): `feat` para funcionalidades e `fix` para correções. O documento também cita `docs`, `test`, `refactor`, `perf`, `style`, `build`, `ci` e `chore`; a lista não é exaustiva, mas prefira esses tipos e não invente outros sem combinar com o time.
 - **Escopo** (opcional): a área afetada, como `auth`, `trips`, `api`, `css`.
-- **Descrição** (obrigatória): em português, com o verbo no **infinitivo** (`adicionar`, `integrar`, `corrigir`, `remover`), como nos exemplos do documento de padrões, começando em minúscula e sem ponto final. Mantenha identificadores de código e rotas como estão (`POST /auth/logout`, `UserMenu`). Procure ficar em até 72 caracteres.
+- **Descrição** (obrigatória): em português, com o verbo no **presente do indicativo** (`adiciona`, `integra`, `corrige`, `remove`), como no histórico do repositório, começando em minúscula e sem ponto final. Os exemplos do documento de padrões usam o infinitivo (`adicionar`), mas o time adotou o presente. Mantenha identificadores de código e rotas como estão (`POST /auth/logout`, `UserMenu`). Procure ficar em até 72 caracteres.
 - **Corpo** (opcional): separado por uma linha em branco. Explique o **porquê**, não o que o diff já mostra.
 - **Rodapés** (opcionais): também separados do corpo por uma linha em branco (ex.: `BREAKING CHANGE: ...`).
 - **Quebra de compatibilidade:** use `!` antes dos dois-pontos e/ou o rodapé `BREAKING CHANGE: <explicação>`, em maiúsculas.
@@ -53,27 +53,27 @@ O `T<NN>` é a posição da subtask dentro do requisito na planilha de tasks (ex
 ### Exemplos
 
 ```
-feat(trips): adicionar cadastro de viagens
-fix(auth): corrigir validação do token
-docs: documentar execução local
-test(trips): cobrir cancelamento de viagem
-feat: integrar cadastro com POST /auth/register
-feat: adicionar ação Sair no menu do usuário integrada a POST /auth/logout
-fix: remover import não utilizado
+feat(trips): adiciona cadastro de viagens
+fix(auth): corrige validação do token
+docs: documenta execução local
+test(trips): cobre cancelamento de viagem
+feat: integra cadastro com POST /auth/register
+feat: adiciona ação Sair no menu do usuário integrada a POST /auth/logout
+fix: remove import não utilizado
 refactor: centraliza cores e extrai classes-base de formulários
 style: ajusta paleta de cores da página de cadastro
-ci: workflow de lint, teste, build e docker
-chore: ignorar .env e remover do versionamento
+ci: adiciona workflow de lint, teste, build e docker
+chore: ignora .env e remove do versionamento
 ```
 
-Commits antigos no presente (`adiciona`, `integra`) não precisam ser reescritos; os novos usam o infinitivo.
+Os quatro primeiros são os exemplos do documento de padrões, passados para o presente.
 
 ### Com escopo e quebra de compatibilidade
 
 ```
-feat(api)!: alterar formato de criação de viagens
+feat(api)!: altera formato de criação de viagens
 
-BREAKING CHANGE: substituir origin e destination por route.
+BREAKING CHANGE: substitui origin e destination por route.
 ```
 
 ### Escolha do tipo
@@ -103,7 +103,7 @@ Adicione os arquivos pelo nome (evite `git add -A`) e commite com HEREDOC:
 ```bash
 git add web/src/features/auth/components/UserMenu.tsx web/src/features/auth/hooks/useLogout.ts
 git commit -m "$(cat <<'EOF'
-feat: adicionar ação Sair no menu do usuário integrada a POST /auth/logout
+feat: adiciona ação Sair no menu do usuário integrada a POST /auth/logout
 EOF
 )"
 ```

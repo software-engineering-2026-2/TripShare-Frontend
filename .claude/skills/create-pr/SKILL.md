@@ -72,8 +72,8 @@ Anote o resultado (e o número de testes) para a seção de validação. Se algo
 
 Use o mesmo formato dos commits (veja a skill `conventional-commit`): `<tipo>[(escopo)]: <descrição em português>`.
 
-- Bom: `feat: adicionar ação Sair no menu do usuário integrada a POST /auth/logout`
-- Bom: `chore: ignorar .env e remover do versionamento`
+- Bom: `feat: adiciona ação Sair no menu do usuário integrada a POST /auth/logout`
+- Bom: `chore: ignora .env e remove do versionamento`
 - Ruim: `Task/ref01 t01 integrar rota cadastro`, que é o título gerado automaticamente pelo GitHub a partir da branch. Nunca use esse.
 
 Se a branch tem um único commit, o título pode ser a própria mensagem dele.
@@ -141,7 +141,7 @@ Se a branch ainda não estiver no remoto, rode `git push -u origin HEAD` primeir
 ```bash
 gh pr create \
   --base REF02 \
-  --title "feat: adicionar ação Sair no menu do usuário integrada a POST /auth/logout" \
+  --title "feat: adiciona ação Sair no menu do usuário integrada a POST /auth/logout" \
   --reviewer <login-do-revisor> \
   --label frontend --label auth \
   --body "$(cat <<'EOF'
