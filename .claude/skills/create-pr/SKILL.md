@@ -45,16 +45,29 @@ Se `git log origin/REF<N>..HEAD` mostrar commits de **outra task ainda não merg
 
 ### Consultar a planilha de tasks
 
-A planilha é pública e pode ser lida em CSV:
+A planilha é pública e tem **uma página por semana** (`semana 1`, `semana 2`, ...), todas com as mesmas colunas. Primeiro, liste as páginas e seus `gid`s. Novas semanas aparecem aqui sozinhas:
 
 ```bash
-curl -sL "https://docs.google.com/spreadsheets/d/1OFr3qFPQGlfouZ0DKPH4TAkghJlATdXhmQ9UufZ2nA8/export?format=csv&gid=0"
+SHEET=https://docs.google.com/spreadsheets/d/1OFr3qFPQGlfouZ0DKPH4TAkghJlATdXhmQ9UufZ2nA8
+curl -sL "$SHEET/htmlview" | grep -o '{name: "[^"]*", pageUrl: "[^"]*gid=[0-9]*' \
+  | sed -E 's/^\{name: "([^"]*)".*gid=([0-9]+)$/\2 \1/'
+# saída: "<gid> <nome da página>", ex.: "0 semana 1" e "510529383 semana 2"
 ```
 
-Colunas: `requisito funcional, subtask, milestone, responsavel, revisor, prazo, andamento`. O `T<NN>` da branch é a posição da subtask dentro do requisito (ex.: a 4ª linha do RF-02 é a `REF02-T04`). Use a planilha para:
+Depois, leia a página de cada semana em CSV, trocando o `<gid>`:
+
+```bash
+curl -sL "$SHEET/export?format=csv&gid=<gid>"
+```
+
+Comece pela semana mais recente e só leia as outras se não achar a subtask. Se a lista de páginas vier vazia ou o CSV vier em HTML, a planilha deixou de ser pública: avise o usuário em vez de inventar dados.
+
+Colunas: `requisito funcional, subtask, milestone, responsavel, revisor, prazo, andamento`. O `T<NN>` da branch é a posição da subtask dentro do requisito **na página da semana**, e a numeração recomeça em cada página (ex.: na `semana 2`, a 4ª linha do RF-05 é a `REF05-T04`). Use a planilha para:
 
 - confirmar o texto da subtask e o requisito (RF-0X) que ela atende;
-- descobrir o **revisor** da subtask.
+- descobrir o **revisor** da subtask. Se a célula estiver vazia, pergunte ao usuário quem vai revisar.
+
+O mesmo `REF<N>-T<NN>` pode existir em semanas diferentes (ex.: `REF05-T01` é "Minhas viagens" na `semana 1` e o formulário de edição da viagem na `semana 2`). Escolha a linha cuja subtask corresponde à descrição da branch e aos commits e, na dúvida, pergunte.
 
 Atenção: a numeração da `REF<N>` nem sempre é igual à do RF. "Minhas viagens" é o RF-04 na planilha, mas a branch é `REF05`. Na dúvida, confirme com o usuário.
 

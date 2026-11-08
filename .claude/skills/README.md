@@ -92,7 +92,7 @@ Comandos usados: `npm run lint`, `npm run typecheck`, `npm run test` e `npm run 
 
 ### 5. Acesso à planilha de tasks
 
-A `create-pr` lê a planilha de tasks em CSV com o `curl`, sem login, para descobrir a subtask e o revisor. Para isso, a planilha precisa continuar com acesso **"Qualquer pessoa com o link pode ver"**. O `curl` já vem no macOS e na maioria das distribuições Linux.
+A `create-pr` lê a planilha de tasks com o `curl`, sem login, para descobrir a subtask e o revisor. Ela lista as páginas da planilha (uma por semana) e lê cada uma em CSV, então novas semanas são encontradas sem ajuste na skill. Para isso, a planilha precisa continuar com acesso **"Qualquer pessoa com o link pode ver"**. O `curl` já vem no macOS e na maioria das distribuições Linux.
 
 A skill só **lê** a planilha. A atualização do andamento (ex.: para `pr feito`) continua sendo manual.
 
