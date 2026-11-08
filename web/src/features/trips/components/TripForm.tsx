@@ -2,9 +2,18 @@ import { useState } from 'react';
 import type {
   CreateTripInput,
   Destination,
+  Trip,
 } from '../../../services/tripsService';
 import {
+  getPeriodConflicts,
+  isInvalidPeriodError,
+  type DayConflict,
+} from '../periodConflicts';
+import {
+  END_BEFORE_START_MESSAGE,
+  formatActivityCount,
   formatDayCount,
+  formatDestination,
   getTripDays,
   validateDestination,
   validateEndDate,
@@ -18,18 +27,26 @@ type TripField = 'title' | 'destination' | 'startDate' | 'endDate';
 type TripValues = Record<TripField, string>;
 type TripErrors = Partial<Record<TripField, string>>;
 
-interface NewTripFormProps {
+interface TripFormProps {
   onSubmit: (input: CreateTripInput) => Promise<void>;
   onCancel: () => void;
   onSearchDestinations: (query: string) => Promise<Destination[]>;
+  // Quando informada, o formulário abre preenchido para edição.
+  trip?: Trip;
 }
 
-const initialValues: TripValues = {
-  title: '',
-  destination: '',
-  startDate: '',
-  endDate: '',
-};
+function getInitialValues(trip?: Trip): TripValues {
+  if (!trip) {
+    return { title: '', destination: '', startDate: '', endDate: '' };
+  }
+
+  return {
+    title: trip.title,
+    destination: formatDestination(trip.destination),
+    startDate: trip.startDate,
+    endDate: trip.endDate,
+  };
+}
 
 function validate(values: TripValues): TripErrors {
   return {
@@ -44,22 +61,27 @@ function hasErrors(errors: TripErrors): boolean {
   return Object.values(errors).some(Boolean);
 }
 
-export default function NewTripForm({
+export default function TripForm({
   onSubmit,
   onCancel,
   onSearchDestinations,
-}: NewTripFormProps) {
-  const [values, setValues] = useState(initialValues);
+  trip,
+}: TripFormProps) {
+  const isEditing = Boolean(trip);
+  const [values, setValues] = useState(() => getInitialValues(trip));
   const [errors, setErrors] = useState<TripErrors>({});
   const [destinationOptions, setDestinationOptions] = useState<Destination[]>(
     [],
   );
   const [selectedDestination, setSelectedDestination] =
-    useState<Destination | null>(null);
+    useState<Destination | null>(trip?.destination ?? null);
   const [submitError, setSubmitError] = useState('');
+  const [periodConflicts, setPeriodConflicts] = useState<DayConflict[]>([]);
   const [loading, setLoading] = useState(false);
 
   const days = getTripDays(values.startDate, values.endDate);
+  const submitLabel = isEditing ? 'Salvar alterações' : 'Criar viagem';
+  const loadingLabel = isEditing ? 'Salvando...' : 'Criando...';
 
   function handleChange(field: TripField, value: string) {
     const nextValues = { ...values, [field]: value };
@@ -68,6 +90,11 @@ export default function NewTripForm({
     if (field === 'destination') {
       setDestinationOptions([]);
       setSelectedDestination(null);
+    }
+
+    // Os conflitos se referem ao período enviado; mudar as datas os invalida.
+    if (field === 'startDate' || field === 'endDate') {
+      setPeriodConflicts([]);
     }
 
     // Só revalida campos que já estão mostrando erro.
@@ -165,8 +192,27 @@ export default function NewTripForm({
         startDate: values.startDate,
         endDate: values.endDate,
       });
-    } catch {
-      setSubmitError('Não foi possível criar a viagem. Tente novamente.');
+    } catch (error) {
+      const conflicts = getPeriodConflicts(error);
+
+      if (conflicts) {
+        setPeriodConflicts(conflicts);
+        return;
+      }
+
+      if (isInvalidPeriodError(error)) {
+        setErrors((currentErrors) => ({
+          ...currentErrors,
+          endDate: END_BEFORE_START_MESSAGE,
+        }));
+        return;
+      }
+
+      setSubmitError(
+        isEditing
+          ? 'Não foi possível salvar as alterações. Tente novamente.'
+          : 'Não foi possível criar a viagem. Tente novamente.',
+      );
     } finally {
       setLoading(false);
     }
@@ -316,6 +362,24 @@ export default function NewTripForm({
           : 'Escolha as datas para ver a duração.'}
       </p>
 
+      {periodConflicts.length > 0 && (
+        <div
+          className="new-trip-field__error trip-period-conflicts"
+          role="alert"
+        >
+          <p>O novo período deixa de fora dias que já têm atividades:</p>
+          <ul className="trip-period-conflicts__list">
+            {periodConflicts.map((conflict) => (
+              <li key={conflict.dayNumber}>
+                Dia {conflict.dayNumber}:{' '}
+                {formatActivityCount(conflict.activityCount)}
+              </li>
+            ))}
+          </ul>
+          <p>Ajuste as datas para manter esses dias.</p>
+        </div>
+      )}
+
       {submitError && (
         <p className="new-trip-field__error" role="alert">
           {submitError}
@@ -336,7 +400,7 @@ export default function NewTripForm({
           type="submit"
           disabled={loading}
         >
-          {loading ? 'Criando...' : 'Criar viagem'}
+          {loading ? loadingLabel : submitLabel}
         </button>
       </div>
     </form>

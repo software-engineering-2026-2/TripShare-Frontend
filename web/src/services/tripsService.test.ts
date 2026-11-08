@@ -10,7 +10,7 @@ const { getIdTokenMock } = vi.hoisted(() => {
 vi.mock('./authService', () => ({ getIdToken: getIdTokenMock }));
 
 import { ApiError } from './api';
-import { createTrip, getTrips } from './tripsService';
+import { createTrip, getTrips, updateTrip } from './tripsService';
 
 const tripResponse = {
   id: 'trip-1',
@@ -124,6 +124,28 @@ describe('createTrip', () => {
     expect(error.body).toEqual({
       status: 404,
       message: 'Destination not found',
+    });
+  });
+});
+
+describe('updateTrip', () => {
+  it('envia PATCH /trips/{id} no formato do back-end e converte a resposta', async () => {
+    respond(200, tripResponse);
+
+    const { id, ...input } = trip;
+    await expect(updateTrip(id, input)).resolves.toEqual(trip);
+
+    const [url, options] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://api.test/trips/trip-1');
+    expect(options.method).toBe('PATCH');
+    expect(options.headers).toMatchObject({
+      Authorization: 'Bearer firebase-id-token',
+    });
+    expect(JSON.parse(options.body)).toEqual({
+      title: 'Mochilão',
+      destinationId: 'dest-1',
+      startsOn: '2027-07-01',
+      endsOn: '2027-07-15',
     });
   });
 });

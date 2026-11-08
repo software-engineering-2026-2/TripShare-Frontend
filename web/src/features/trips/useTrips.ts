@@ -1,5 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createTrip, getTrips } from '../../services/tripsService';
+import {
+  createTrip,
+  getTrips,
+  updateTrip,
+  type UpdateTripInput,
+} from '../../services/tripsService';
 
 export function useTrips() {
   return useQuery({
@@ -13,6 +18,18 @@ export function useCreateTrip() {
 
   return useMutation({
     mutationFn: createTrip,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
+    },
+  });
+}
+
+export function useUpdateTrip() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: UpdateTripInput }) =>
+      updateTrip(id, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trips'] });
     },

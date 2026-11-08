@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatActivityCount,
   formatDayCount,
   formatDestination,
   formatTripPeriod,
@@ -49,6 +50,13 @@ describe('formatDayCount', () => {
   it('usa singular e plural', () => {
     expect(formatDayCount(1)).toBe('1 dia');
     expect(formatDayCount(4)).toBe('4 dias');
+  });
+});
+
+describe('formatActivityCount', () => {
+  it('usa singular e plural', () => {
+    expect(formatActivityCount(1)).toBe('1 atividade');
+    expect(formatActivityCount(3)).toBe('3 atividades');
   });
 });
 
