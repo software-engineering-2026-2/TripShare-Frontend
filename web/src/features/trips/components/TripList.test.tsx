@@ -1,11 +1,12 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { Trip } from '../../../services/tripsService';
 import TripList from './TripList';
 
 afterEach(cleanup);
 
-const trips = [
+const trips: Trip[] = [
   {
     id: '1',
     title: 'Férias de verão',
@@ -31,7 +32,7 @@ describe('TripList', () => {
   it('mostra o estado vazio e abre o formulário pelo botão', async () => {
     const user = userEvent.setup();
     const onNewTrip = vi.fn();
-    render(<TripList trips={[]} onNewTrip={onNewTrip} />);
+    render(<TripList trips={[]} onNewTrip={onNewTrip} onEditTrip={vi.fn()} />);
 
     expect(screen.getByText('Você ainda não tem viagens')).toBeInTheDocument();
 
@@ -41,7 +42,7 @@ describe('TripList', () => {
   });
 
   it('lista as viagens com destino, período e duração', () => {
-    render(<TripList trips={trips} onNewTrip={vi.fn()} />);
+    render(<TripList trips={trips} onNewTrip={vi.fn()} onEditTrip={vi.fn()} />);
 
     const items = screen.getAllByRole('listitem');
     expect(items).toHaveLength(2);
@@ -61,5 +62,19 @@ describe('TripList', () => {
     expect(
       screen.queryByText('Você ainda não tem viagens'),
     ).not.toBeInTheDocument();
+  });
+
+  it('abre a edição da viagem escolhida pelo botão do card', async () => {
+    const user = userEvent.setup();
+    const onEditTrip = vi.fn();
+    render(
+      <TripList trips={trips} onNewTrip={vi.fn()} onEditTrip={onEditTrip} />,
+    );
+
+    await user.click(
+      screen.getByRole('button', { name: 'Editar viagem Bate e volta' }),
+    );
+
+    expect(onEditTrip).toHaveBeenCalledWith(trips[1]);
   });
 });
