@@ -2,7 +2,12 @@
 // A busca de destinos usa este mock sempre: o back-end ainda não tem rota de destinos,
 // então os ids abaixo precisam existir no banco para o POST /trips funcionar.
 // Vou apagar isso quando a API tiver pronta
-import type { CreateTripInput, Destination, Trip } from './tripsService';
+import type {
+  CreateTripInput,
+  Destination,
+  Trip,
+  TripDeletionSummary,
+} from './tripsService';
 
 const destinations: Destination[] = [
   {
@@ -54,6 +59,11 @@ const trips: Trip[] = [
   },
 ];
 
+// Roteiros, publicações e favoritos por viagem; viagens fora daqui não têm nenhum.
+const deletionSummaryByTrip: Record<string, TripDeletionSummary> = {
+  '1': { itineraryCount: 3, publishedItineraryCount: 1, favoriteCount: 4 },
+};
+
 function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -68,6 +78,31 @@ export async function mockCreateTrip(input: CreateTripInput): Promise<Trip> {
   const trip = { ...input, id: String(Date.now()) };
   trips.push(trip);
   return trip;
+}
+
+export async function mockGetTripDeletionSummary(
+  id: string,
+): Promise<TripDeletionSummary> {
+  await wait(300);
+  return (
+    deletionSummaryByTrip[id] ?? {
+      itineraryCount: 0,
+      publishedItineraryCount: 0,
+      favoriteCount: 0,
+    }
+  );
+}
+
+export async function mockDeleteTrip(id: string): Promise<void> {
+  await wait(500);
+  const index = trips.findIndex((trip) => trip.id === id);
+
+  if (index === -1) {
+    throw new Error('Viagem não encontrada');
+  }
+
+  trips.splice(index, 1);
+  delete deletionSummaryByTrip[id];
 }
 
 export async function mockSearchDestinations(

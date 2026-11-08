@@ -39,6 +39,18 @@ export function formatDayCount(days: number): string {
   return days === 1 ? '1 dia' : `${days} dias`;
 }
 
+export function formatItineraryCount(count: number): string {
+  return count === 1 ? '1 roteiro' : `${count} roteiros`;
+}
+
+export function formatPublicationCount(count: number): string {
+  return count === 1 ? '1 publicação' : `${count} publicações`;
+}
+
+export function formatFavoriteCount(count: number): string {
+  return count === 1 ? '1 favorito' : `${count} favoritos`;
+}
+
 export function formatDestination(destination: Destination): string {
   return [destination.city, destination.region, destination.country]
     .filter(Boolean)
