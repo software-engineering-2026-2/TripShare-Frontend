@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import type {
-  CreateTripInput,
   Destination,
   Trip,
+  UpdateTripInput,
 } from '../../../services/tripsService';
 import {
   getPeriodConflicts,
   isInvalidPeriodError,
+  isInvalidResolutionError,
   type DayConflict,
+  type DayResolution,
 } from '../periodConflicts';
 import {
   END_BEFORE_START_MESSAGE,
-  formatActivityCount,
   formatDayCount,
   formatDestination,
   getTripDays,
@@ -21,6 +22,7 @@ import {
   validateTitle,
 } from '../tripValidation';
 import DestinationOptions from './DestinationOptions';
+import PeriodConflictResolver from './PeriodConflictResolver';
 
 type TripField = 'title' | 'destination' | 'startDate' | 'endDate';
 
@@ -28,7 +30,8 @@ type TripValues = Record<TripField, string>;
 type TripErrors = Partial<Record<TripField, string>>;
 
 interface TripFormProps {
-  onSubmit: (input: CreateTripInput) => Promise<void>;
+  // Na criação, `resolutions` nunca é enviado (só existe após um 409 da edição).
+  onSubmit: (input: UpdateTripInput) => Promise<void>;
   onCancel: () => void;
   onSearchDestinations: (query: string) => Promise<Destination[]>;
   // Quando informada, o formulário abre preenchido para edição.
@@ -77,6 +80,10 @@ export default function TripForm({
     useState<Destination | null>(trip?.destination ?? null);
   const [submitError, setSubmitError] = useState('');
   const [periodConflicts, setPeriodConflicts] = useState<DayConflict[]>([]);
+  const [resolutions, setResolutions] = useState<
+    Partial<Record<number, DayResolution>>
+  >({});
+  const [resolutionError, setResolutionError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const days = getTripDays(values.startDate, values.endDate);
@@ -94,7 +101,7 @@ export default function TripForm({
 
     // Os conflitos se referem ao período enviado; mudar as datas os invalida.
     if (field === 'startDate' || field === 'endDate') {
-      setPeriodConflicts([]);
+      clearPeriodConflicts();
     }
 
     // Só revalida campos que já estão mostrando erro.
@@ -110,6 +117,28 @@ export default function TripForm({
 
       return updatedErrors;
     });
+  }
+
+  function clearPeriodConflicts() {
+    setPeriodConflicts([]);
+    setResolutions({});
+    setResolutionError('');
+  }
+
+  function handleResolutionChange(resolution: DayResolution) {
+    setResolutions((current) => ({
+      ...current,
+      [resolution.dayNumber]: resolution,
+    }));
+    setResolutionError('');
+  }
+
+  // Escolhas de todos os dias em conflito, ou null se algum ainda estiver sem escolha.
+  function getChosenResolutions(): DayResolution[] | null {
+    const chosen = periodConflicts.map(
+      (conflict) => resolutions[conflict.dayNumber],
+    );
+    return chosen.every(Boolean) ? (chosen as DayResolution[]) : null;
   }
 
   function handleBlur(field: TripField) {
@@ -168,6 +197,14 @@ export default function TripForm({
       return;
     }
 
+    const chosenResolutions =
+      periodConflicts.length > 0 ? getChosenResolutions() : undefined;
+
+    if (chosenResolutions === null) {
+      setResolutionError('Escolha o que fazer com as atividades de cada dia.');
+      return;
+    }
+
     setLoading(true);
 
     let destination: Destination | null;
@@ -191,12 +228,23 @@ export default function TripForm({
         destination,
         startDate: values.startDate,
         endDate: values.endDate,
+        ...(chosenResolutions && { resolutions: chosenResolutions }),
       });
     } catch (error) {
       const conflicts = getPeriodConflicts(error);
 
       if (conflicts) {
         setPeriodConflicts(conflicts);
+        setResolutions({});
+        return;
+      }
+
+      // O back recusou as escolhas: os conflitos mudaram desde o 409.
+      if (chosenResolutions && isInvalidResolutionError(error)) {
+        clearPeriodConflicts();
+        setSubmitError(
+          'Os dias em conflito mudaram. Salve novamente para ver a lista atualizada.',
+        );
         return;
       }
 
@@ -363,21 +411,13 @@ export default function TripForm({
       </p>
 
       {periodConflicts.length > 0 && (
-        <div
-          className="new-trip-field__error trip-period-conflicts"
-          role="alert"
-        >
-          <p>O novo período deixa de fora dias que já têm atividades:</p>
-          <ul className="trip-period-conflicts__list">
-            {periodConflicts.map((conflict) => (
-              <li key={conflict.dayNumber}>
-                Dia {conflict.dayNumber}:{' '}
-                {formatActivityCount(conflict.activityCount)}
-              </li>
-            ))}
-          </ul>
-          <p>Ajuste as datas para manter esses dias.</p>
-        </div>
+        <PeriodConflictResolver
+          conflicts={periodConflicts}
+          duration={days}
+          resolutions={resolutions}
+          onChange={handleResolutionChange}
+          error={resolutionError}
+        />
       )}
 
       {submitError && (

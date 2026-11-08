@@ -148,4 +148,24 @@ describe('updateTrip', () => {
       endsOn: '2027-07-15',
     });
   });
+
+  it('envia as resoluções dos dias em conflito quando informadas', async () => {
+    respond(200, tripResponse);
+
+    const { id, ...input } = trip;
+    const resolutions = [
+      { dayNumber: 14, action: 'MOVE' as const, targetDay: 10 },
+      { dayNumber: 15, action: 'REMOVE' as const },
+    ];
+    await updateTrip(id, { ...input, endDate: '2027-07-10', resolutions });
+
+    const [, options] = fetchMock.mock.calls[0];
+    expect(JSON.parse(options.body)).toEqual({
+      title: 'Mochilão',
+      destinationId: 'dest-1',
+      startsOn: '2027-07-01',
+      endsOn: '2027-07-10',
+      resolutions,
+    });
+  });
 });

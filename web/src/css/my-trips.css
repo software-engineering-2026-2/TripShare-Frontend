@@ -261,11 +261,45 @@
   border: 1px solid var(--color-danger-border);
   border-radius: 8px;
   background: var(--color-danger-bg);
+  color: var(--color-text);
+  font-size: 15px;
 }
 
-.trip-period-conflicts__list {
+.trip-period-conflicts__intro {
+  color: var(--color-danger);
+}
+
+.trip-period-conflicts__day {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   margin: 0;
-  padding-left: 20px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+
+.trip-period-conflicts__day-title {
+  padding: 0 4px;
+  font-weight: 600;
+}
+
+.trip-period-conflicts__option,
+.trip-period-conflicts__option label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.trip-period-conflicts__select {
+  width: auto;
+}
+
+.trip-period-conflicts__warning {
+  color: var(--color-danger);
+  font-weight: 600;
 }
 
 .destination-options {

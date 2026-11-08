@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { ApiError } from '../../services/api';
-import { getPeriodConflicts, isInvalidPeriodError } from './periodConflicts';
+import {
+  getPeriodConflicts,
+  isInvalidPeriodError,
+  isInvalidResolutionError,
+} from './periodConflicts';
 
 describe('getPeriodConflicts', () => {
   const conflicts = [
@@ -39,5 +43,30 @@ describe('isInvalidPeriodError', () => {
     ).toBe(false);
     expect(isInvalidPeriodError(new ApiError(400, null))).toBe(false);
     expect(isInvalidPeriodError(new Error('falha'))).toBe(false);
+  });
+});
+
+describe('isInvalidResolutionError', () => {
+  it('reconhece o 400 de resoluções inválidas', () => {
+    const error = new ApiError(400, {
+      status: 400,
+      message:
+        'Trip must specify a valid date range or a positive duration in days',
+    });
+
+    expect(isInvalidResolutionError(error)).toBe(true);
+  });
+
+  it('ignora outros 400 e erros que não são da API', () => {
+    expect(
+      isInvalidResolutionError(
+        new ApiError(400, {
+          status: 400,
+          message: 'End date cannot be before start date',
+        }),
+      ),
+    ).toBe(false);
+    expect(isInvalidResolutionError(new ApiError(409, null))).toBe(false);
+    expect(isInvalidResolutionError(new Error('falha'))).toBe(false);
   });
 });

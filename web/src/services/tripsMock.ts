@@ -2,7 +2,11 @@
 // A busca de destinos usa este mock sempre: o back-end ainda não tem rota de destinos,
 // então os ids abaixo precisam existir no banco para o POST /trips funcionar.
 // Vou apagar isso quando a API tiver pronta
-import type { DayConflict } from '../features/trips/periodConflicts';
+import {
+  INVALID_DURATION_MESSAGE,
+  type DayConflict,
+  type DayResolution,
+} from '../features/trips/periodConflicts';
 import { getTripDays } from '../features/trips/tripValidation';
 import { ApiError } from './api';
 import type {
@@ -100,17 +104,64 @@ export async function mockUpdateTrip(
     .map(([day, count]) => ({ dayNumber: Number(day), activityCount: count }))
     .filter((conflict) => conflict.dayNumber > newDuration);
 
+  const { resolutions, ...tripInput } = input;
+
   if (conflicts.length > 0) {
-    throw new ApiError(409, {
-      status: 409,
-      message:
-        'Cannot shorten trip: activities exist on days outside the new period',
-      conflicts,
-    });
+    if (!resolutions?.length) {
+      throw new ApiError(409, {
+        status: 409,
+        message:
+          'Cannot shorten trip: activities exist on days outside the new period',
+        conflicts,
+      });
+    }
+
+    if (!areValidResolutions(conflicts, resolutions, newDuration)) {
+      throw new ApiError(400, {
+        status: 400,
+        message: INVALID_DURATION_MESSAGE,
+      });
+    }
+
+    applyResolutions(activitiesByTrip[id], resolutions);
   }
 
-  trips[index] = { ...input, id };
+  trips[index] = { ...tripInput, id };
   return trips[index];
+}
+
+// Mesmas regras de TripService.validateResolutions: uma escolha por dia em conflito.
+function areValidResolutions(
+  conflicts: DayConflict[],
+  resolutions: DayResolution[],
+  newDuration: number,
+): boolean {
+  const days = new Set(resolutions.map((resolution) => resolution.dayNumber));
+  return (
+    days.size === resolutions.length &&
+    resolutions.length === conflicts.length &&
+    conflicts.every((conflict) => days.has(conflict.dayNumber)) &&
+    resolutions.every(
+      (resolution) =>
+        resolution.action === 'REMOVE' ||
+        (resolution.targetDay >= 1 && resolution.targetDay <= newDuration),
+    )
+  );
+}
+
+function applyResolutions(
+  activities: Record<number, number>,
+  resolutions: DayResolution[],
+) {
+  resolutions.forEach((resolution) => {
+    const count = activities[resolution.dayNumber];
+    delete activities[resolution.dayNumber];
+
+    if (resolution.action === 'MOVE') {
+      activities[resolution.targetDay] =
+        (activities[resolution.targetDay] ?? 0) + count;
+    }
+  });
 }
 
 export async function mockSearchDestinations(

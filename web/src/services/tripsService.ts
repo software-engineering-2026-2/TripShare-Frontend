@@ -1,3 +1,4 @@
+import type { DayResolution } from '../features/trips/periodConflicts';
 import { request } from './api';
 import { getIdToken } from './authService';
 import {
@@ -28,7 +29,10 @@ export interface Trip {
 
 export type CreateTripInput = Omit<Trip, 'id'>;
 
-export type UpdateTripInput = CreateTripInput;
+export type UpdateTripInput = CreateTripInput & {
+  // Escolhas para os dias em conflito, enviadas após um 409 do PATCH.
+  resolutions?: DayResolution[];
+};
 
 // Campos usados de TripResponse do back-end (dto/TripResponse.java).
 interface TripResponse {
@@ -102,7 +106,10 @@ export async function updateTrip(
   const trip = await request<TripResponse>(`/trips/${id}`, {
     method: 'PATCH',
     headers: await authHeaders(),
-    body: JSON.stringify(toTripRequest(input)),
+    body: JSON.stringify({
+      ...toTripRequest(input),
+      resolutions: input.resolutions,
+    }),
   });
   return toTrip(trip);
 }
