@@ -2,6 +2,8 @@ import { request } from './api';
 import { getIdToken } from './authService';
 import {
   mockCreateTrip,
+  mockDeleteTrip,
+  mockGetTripDeletionSummary,
   mockGetTrips,
   mockSearchDestinations,
 } from './tripsMock';
@@ -26,6 +28,13 @@ export interface Trip {
 }
 
 export type CreateTripInput = Omit<Trip, 'id'>;
+
+// O que é apagado junto com a viagem: roteiros, os publicados entre eles e os favoritos que receberam.
+export interface TripDeletionSummary {
+  itineraryCount: number;
+  publishedItineraryCount: number;
+  favoriteCount: number;
+}
 
 // Campos usados de TripResponse do back-end (dto/TripResponse.java).
 interface TripResponse {
@@ -84,6 +93,25 @@ export async function createTrip(input: CreateTripInput): Promise<Trip> {
     }),
   });
   return toTrip(trip);
+}
+
+// GET /trips/{id}/deletion-summary ainda não existe no back-end: contrato proposto na T04 do RF-05.
+export async function getTripDeletionSummary(
+  id: string,
+): Promise<TripDeletionSummary> {
+  if (USE_MOCKS) return mockGetTripDeletionSummary(id);
+  return request<TripDeletionSummary>(`/trips/${id}/deletion-summary`, {
+    headers: await authHeaders(),
+  });
+}
+
+// DELETE /trips/{id} ainda não existe no back-end: assume 204 sem corpo.
+export async function deleteTrip(id: string): Promise<void> {
+  if (USE_MOCKS) return mockDeleteTrip(id);
+  await request<void>(`/trips/${id}`, {
+    method: 'DELETE',
+    headers: await authHeaders(),
+  });
 }
 
 // Back-end ainda não expõe busca de destinos: segue usando o mock.

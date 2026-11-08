@@ -1,5 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createTrip, getTrips } from '../../services/tripsService';
+import {
+  createTrip,
+  deleteTrip,
+  getTripDeletionSummary,
+  getTrips,
+} from '../../services/tripsService';
 
 export function useTrips() {
   return useQuery({
@@ -13,6 +18,28 @@ export function useCreateTrip() {
 
   return useMutation({
     mutationFn: createTrip,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
+    },
+  });
+}
+
+export function useTripDeletionSummary(id: string | undefined) {
+  return useQuery({
+    queryKey: ['trips', id, 'deletion-summary'],
+    queryFn: () => getTripDeletionSummary(id!),
+    enabled: !!id,
+    // As contagens mudam fora desta tela; busca de novo a cada abertura da confirmação.
+    staleTime: 0,
+    gcTime: 0,
+  });
+}
+
+export function useDeleteTrip() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteTrip,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trips'] });
     },
