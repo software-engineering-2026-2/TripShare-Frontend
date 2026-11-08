@@ -56,6 +56,7 @@ describe('formatDestination', () => {
   it('junta cidade, região e país', () => {
     expect(
       formatDestination({
+        id: 'd1',
         city: 'Paris',
         region: 'Île-de-France',
         country: 'França',
@@ -66,6 +67,7 @@ describe('formatDestination', () => {
   it('ignora partes vazias', () => {
     expect(
       formatDestination({
+        id: 'd1',
         city: 'Singapura',
         region: '',
         country: 'Singapura',
