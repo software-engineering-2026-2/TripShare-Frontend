@@ -25,9 +25,7 @@ const parisTx: Destination = {
   country: 'Estados Unidos',
 };
 
-function renderForm(
-  overrides: Partial<Parameters<typeof TripForm>[0]> = {},
-) {
+function renderForm(overrides: Partial<Parameters<typeof TripForm>[0]> = {}) {
   const props = {
     onSubmit: vi.fn().mockResolvedValue(undefined),
     onCancel: vi.fn(),

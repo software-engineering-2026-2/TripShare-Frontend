@@ -1,10 +1,21 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ApiError } from '../../../services/api';
 import type { Trip } from '../../../services/tripsService';
 import TripForm from './TripForm';
 
 afterEach(cleanup);
+
+function periodConflictError(
+  conflicts: { dayNumber: number; activityCount: number }[],
+) {
+  return new ApiError(409, {
+    status: 409,
+    message: 'Cannot shorten trip',
+    conflicts,
+  });
+}
 
 const trip: Trip = {
   id: '1',
@@ -111,5 +122,82 @@ describe('TripForm em modo de edição', () => {
         'Não foi possível salvar as alterações. Tente novamente.',
       ),
     ).toBeInTheDocument();
+  });
+
+  it('lista os dias em conflito quando o back-end recusa a redução do período', async () => {
+    const user = userEvent.setup();
+    renderEditForm(
+      vi.fn().mockRejectedValue(
+        periodConflictError([
+          { dayNumber: 9, activityCount: 2 },
+          { dayNumber: 11, activityCount: 1 },
+        ]),
+      ),
+    );
+
+    fireEvent.change(screen.getByLabelText('Data de término'), {
+      target: { value: '2027-01-15' },
+    });
+    await user.click(screen.getByRole('button', { name: 'Salvar alterações' }));
+
+    expect(
+      await screen.findByText(
+        'O novo período deixa de fora dias que já têm atividades:',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Dia 9: 2 atividades')).toBeInTheDocument();
+    expect(screen.getByText('Dia 11: 1 atividade')).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        'Não foi possível salvar as alterações. Tente novamente.',
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Salvar alterações' }),
+    ).toBeEnabled();
+  });
+
+  it('esconde os conflitos quando as datas são alteradas', async () => {
+    const user = userEvent.setup();
+    renderEditForm(
+      vi
+        .fn()
+        .mockRejectedValue(
+          periodConflictError([{ dayNumber: 11, activityCount: 1 }]),
+        ),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Salvar alterações' }));
+    expect(await screen.findByText('Dia 11: 1 atividade')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Data de término'), {
+      target: { value: '2027-01-21' },
+    });
+
+    expect(screen.queryByText('Dia 11: 1 atividade')).not.toBeInTheDocument();
+  });
+
+  it('mostra o erro de período no campo de término quando o back-end responde 400', async () => {
+    const user = userEvent.setup();
+    renderEditForm(
+      vi.fn().mockRejectedValue(
+        new ApiError(400, {
+          status: 400,
+          message: 'End date cannot be before start date',
+        }),
+      ),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Salvar alterações' }));
+
+    expect(
+      await screen.findByText(
+        'A data de término não pode ser antes da data de início.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Data de término')).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
   });
 });

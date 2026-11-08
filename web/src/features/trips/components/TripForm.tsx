@@ -5,6 +5,13 @@ import type {
   Trip,
 } from '../../../services/tripsService';
 import {
+  getPeriodConflicts,
+  isInvalidPeriodError,
+  type DayConflict,
+} from '../periodConflicts';
+import {
+  END_BEFORE_START_MESSAGE,
+  formatActivityCount,
   formatDayCount,
   formatDestination,
   getTripDays,
@@ -69,6 +76,7 @@ export default function TripForm({
   const [selectedDestination, setSelectedDestination] =
     useState<Destination | null>(trip?.destination ?? null);
   const [submitError, setSubmitError] = useState('');
+  const [periodConflicts, setPeriodConflicts] = useState<DayConflict[]>([]);
   const [loading, setLoading] = useState(false);
 
   const days = getTripDays(values.startDate, values.endDate);
@@ -82,6 +90,11 @@ export default function TripForm({
     if (field === 'destination') {
       setDestinationOptions([]);
       setSelectedDestination(null);
+    }
+
+    // Os conflitos se referem ao período enviado; mudar as datas os invalida.
+    if (field === 'startDate' || field === 'endDate') {
+      setPeriodConflicts([]);
     }
 
     // Só revalida campos que já estão mostrando erro.
@@ -179,7 +192,22 @@ export default function TripForm({
         startDate: values.startDate,
         endDate: values.endDate,
       });
-    } catch {
+    } catch (error) {
+      const conflicts = getPeriodConflicts(error);
+
+      if (conflicts) {
+        setPeriodConflicts(conflicts);
+        return;
+      }
+
+      if (isInvalidPeriodError(error)) {
+        setErrors((currentErrors) => ({
+          ...currentErrors,
+          endDate: END_BEFORE_START_MESSAGE,
+        }));
+        return;
+      }
+
       setSubmitError(
         isEditing
           ? 'Não foi possível salvar as alterações. Tente novamente.'
@@ -333,6 +361,24 @@ export default function TripForm({
           ? `Duração: ${formatDayCount(days)}`
           : 'Escolha as datas para ver a duração.'}
       </p>
+
+      {periodConflicts.length > 0 && (
+        <div
+          className="new-trip-field__error trip-period-conflicts"
+          role="alert"
+        >
+          <p>O novo período deixa de fora dias que já têm atividades:</p>
+          <ul className="trip-period-conflicts__list">
+            {periodConflicts.map((conflict) => (
+              <li key={conflict.dayNumber}>
+                Dia {conflict.dayNumber}:{' '}
+                {formatActivityCount(conflict.activityCount)}
+              </li>
+            ))}
+          </ul>
+          <p>Ajuste as datas para manter esses dias.</p>
+        </div>
+      )}
 
       {submitError && (
         <p className="new-trip-field__error" role="alert">

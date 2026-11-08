@@ -61,6 +61,16 @@ function toTrip(response: TripResponse): Trip {
   };
 }
 
+// Corpo de POST /trips e PATCH /trips/{id} (CreateTripRequest/UpdateTripRequest do back-end).
+function toTripRequest(input: CreateTripInput) {
+  return {
+    title: input.title,
+    destinationId: input.destination.id,
+    startsOn: input.startDate,
+    endsOn: input.endDate,
+  };
+}
+
 async function authHeaders() {
   return { Authorization: `Bearer ${await getIdToken()}` };
 }
@@ -79,12 +89,20 @@ export async function createTrip(input: CreateTripInput): Promise<Trip> {
   const trip = await request<TripResponse>('/trips', {
     method: 'POST',
     headers: await authHeaders(),
-    body: JSON.stringify({
-      title: input.title,
-      destinationId: input.destination.id,
-      startsOn: input.startDate,
-      endsOn: input.endDate,
-    }),
+    body: JSON.stringify(toTripRequest(input)),
+  });
+  return toTrip(trip);
+}
+
+export async function updateTrip(
+  id: string,
+  input: UpdateTripInput,
+): Promise<Trip> {
+  if (USE_MOCKS) return mockUpdateTrip(id, input);
+  const trip = await request<TripResponse>(`/trips/${id}`, {
+    method: 'PATCH',
+    headers: await authHeaders(),
+    body: JSON.stringify(toTripRequest(input)),
   });
   return toTrip(trip);
 }
@@ -92,13 +110,4 @@ export async function createTrip(input: CreateTripInput): Promise<Trip> {
 // Back-end ainda não expõe busca de destinos: segue usando o mock.
 export function searchDestinations(query: string): Promise<Destination[]> {
   return mockSearchDestinations(query);
-}
-
-// O back-end (branch RF-05) espera destinationId, startsOn e endsOn; ajustar o corpo quando os tipos vierem do OpenAPI.
-export function updateTrip(id: string, input: UpdateTripInput): Promise<Trip> {
-  if (USE_MOCKS) return mockUpdateTrip(id, input);
-  return request<Trip>(`/trips/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(input),
-  });
 }
