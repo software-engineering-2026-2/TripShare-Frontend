@@ -1,8 +1,9 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ApiError } from '../../../services/api';
 import type { Destination } from '../../../services/tripsService';
-import NewTripForm from './NewTripForm';
+import TripForm from './TripForm';
 
 afterEach(cleanup);
 
@@ -25,16 +26,14 @@ const parisTx: Destination = {
   country: 'Estados Unidos',
 };
 
-function renderForm(
-  overrides: Partial<Parameters<typeof NewTripForm>[0]> = {},
-) {
+function renderForm(overrides: Partial<Parameters<typeof TripForm>[0]> = {}) {
   const props = {
     onSubmit: vi.fn().mockResolvedValue(undefined),
     onCancel: vi.fn(),
     onSearchDestinations: vi.fn().mockResolvedValue([lisboa]),
     ...overrides,
   };
-  render(<NewTripForm {...props} />);
+  render(<TripForm {...props} />);
   return { user: userEvent.setup(), props };
 }
 
@@ -52,7 +51,7 @@ function submit(user: ReturnType<typeof userEvent.setup>) {
   return user.click(screen.getByRole('button', { name: 'Criar viagem' }));
 }
 
-describe('NewTripForm', () => {
+describe('TripForm', () => {
   it('exibe erros para todos os campos vazios e não envia', async () => {
     const { user, props } = renderForm();
 
@@ -166,6 +165,26 @@ describe('NewTripForm', () => {
       screen.getByText('Não foi possível buscar o destino. Tente novamente.'),
     ).toBeInTheDocument();
     expect(props.onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Criar viagem' })).toBeEnabled();
+  });
+
+  it('trata 404 na criação como erro genérico, sem bloquear o envio', async () => {
+    const { user } = renderForm({
+      onSubmit: vi
+        .fn()
+        .mockRejectedValue(
+          new ApiError(404, { status: 404, message: 'Destination not found' }),
+        ),
+    });
+
+    await fillForm(user);
+    await submit(user);
+
+    expect(
+      await screen.findByText(
+        'Não foi possível criar a viagem. Tente novamente.',
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Criar viagem' })).toBeEnabled();
   });
 

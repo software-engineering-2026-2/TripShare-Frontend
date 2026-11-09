@@ -2,6 +2,9 @@ import type { Destination } from '../../services/tripsService';
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
+export const END_BEFORE_START_MESSAGE =
+  'A data de término não pode ser antes da data de início.';
+
 // Datas chegam como AAAA-MM-DD; convertemos em UTC para não sofrer com fuso horário.
 function toUtcTime(date: string): number {
   const [year, month, day] = date.split('-').map(Number);
@@ -37,6 +40,22 @@ export function formatTripPeriod(startDate: string, endDate: string): string {
 
 export function formatDayCount(days: number): string {
   return days === 1 ? '1 dia' : `${days} dias`;
+}
+
+export function formatActivityCount(count: number): string {
+  return count === 1 ? '1 atividade' : `${count} atividades`;
+}
+
+export function formatItineraryCount(count: number): string {
+  return count === 1 ? '1 roteiro' : `${count} roteiros`;
+}
+
+export function formatPublicationCount(count: number): string {
+  return count === 1 ? '1 publicação' : `${count} publicações`;
+}
+
+export function formatFavoriteCount(count: number): string {
+  return count === 1 ? '1 favorito' : `${count} favoritos`;
 }
 
 export function formatDestination(destination: Destination): string {
@@ -78,7 +97,7 @@ export function validateEndDate(
   }
 
   if (startDate && value < startDate) {
-    return 'A data de término não pode ser antes da data de início.';
+    return END_BEFORE_START_MESSAGE;
   }
 
   return undefined;
