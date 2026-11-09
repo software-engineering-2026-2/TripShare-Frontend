@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   formatActivityCount,
   formatDayCount,
+  formatFavoriteCount,
+  formatItineraryCount,
+  formatPublicationCount,
   formatDestination,
   formatTripPeriod,
   getTripDays,
@@ -131,5 +134,19 @@ describe('validateEndDate', () => {
   it('aceita término igual ou depois do início', () => {
     expect(validateEndDate('2026-11-10', '2026-11-10')).toBeUndefined();
     expect(validateEndDate('2026-11-12', '2026-11-10')).toBeUndefined();
+  });
+});
+
+describe('contagens do resumo de exclusão', () => {
+  it('usa singular para 1 e plural para os demais', () => {
+    expect(formatItineraryCount(0)).toBe('0 roteiros');
+    expect(formatItineraryCount(1)).toBe('1 roteiro');
+    expect(formatItineraryCount(2)).toBe('2 roteiros');
+    expect(formatPublicationCount(0)).toBe('0 publicações');
+    expect(formatPublicationCount(1)).toBe('1 publicação');
+    expect(formatPublicationCount(2)).toBe('2 publicações');
+    expect(formatFavoriteCount(0)).toBe('0 favoritos');
+    expect(formatFavoriteCount(1)).toBe('1 favorito');
+    expect(formatFavoriteCount(2)).toBe('2 favoritos');
   });
 });

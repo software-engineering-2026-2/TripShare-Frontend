@@ -13,6 +13,7 @@ import type {
   CreateTripInput,
   Destination,
   Trip,
+  TripDeletionSummary,
   UpdateTripInput,
 } from './tripsService';
 
@@ -69,6 +70,11 @@ const trips: Trip[] = [
 // Atividades já planejadas por dia da viagem (número do dia -> quantidade).
 const activitiesByTrip: Record<string, Record<number, number>> = {
   '1': { 9: 2, 11: 1 },
+};
+
+// Roteiros, publicações e favoritos por viagem; viagens fora daqui não têm nenhum.
+const deletionSummaryByTrip: Record<string, TripDeletionSummary> = {
+  '1': { itineraryCount: 3, publishedItineraryCount: 1, favoriteCount: 4 },
 };
 
 function wait(ms: number) {
@@ -162,6 +168,32 @@ function applyResolutions(
         (activities[resolution.targetDay] ?? 0) + count;
     }
   });
+}
+
+export async function mockGetTripDeletionSummary(
+  id: string,
+): Promise<TripDeletionSummary> {
+  await wait(300);
+  return (
+    deletionSummaryByTrip[id] ?? {
+      itineraryCount: 0,
+      publishedItineraryCount: 0,
+      favoriteCount: 0,
+    }
+  );
+}
+
+export async function mockDeleteTrip(id: string): Promise<void> {
+  await wait(500);
+  const index = trips.findIndex((trip) => trip.id === id);
+
+  if (index === -1) {
+    throw new Error('Viagem não encontrada');
+  }
+
+  trips.splice(index, 1);
+  delete deletionSummaryByTrip[id];
+  delete activitiesByTrip[id];
 }
 
 export async function mockSearchDestinations(

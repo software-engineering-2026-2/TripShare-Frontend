@@ -10,7 +10,13 @@ const { getIdTokenMock } = vi.hoisted(() => {
 vi.mock('./authService', () => ({ getIdToken: getIdTokenMock }));
 
 import { ApiError } from './api';
-import { createTrip, getTrips, updateTrip } from './tripsService';
+import {
+  createTrip,
+  deleteTrip,
+  getTripDeletionSummary,
+  getTrips,
+  updateTrip,
+} from './tripsService';
 
 const tripResponse = {
   id: 'trip-1',
@@ -166,6 +172,50 @@ describe('updateTrip', () => {
       startsOn: '2027-07-01',
       endsOn: '2027-07-10',
       resolutions,
+    });
+  });
+});
+
+describe('getTripDeletionSummary', () => {
+  it('chama GET /trips/{id}/deletion-summary com o token', async () => {
+    const summary = {
+      itineraryCount: 3,
+      publishedItineraryCount: 1,
+      favoriteCount: 4,
+    };
+    respond(200, summary);
+
+    await expect(getTripDeletionSummary('trip-1')).resolves.toEqual(summary);
+
+    const [url, options] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://api.test/trips/trip-1/deletion-summary');
+    expect(options.method).toBeUndefined();
+    expect(options.headers).toMatchObject({
+      Authorization: 'Bearer firebase-id-token',
+    });
+  });
+});
+
+describe('deleteTrip', () => {
+  it('chama DELETE /trips/{id} com o token e aceita 204', async () => {
+    respond(204, null);
+
+    await expect(deleteTrip('trip-1')).resolves.toBeUndefined();
+
+    const [url, options] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://api.test/trips/trip-1');
+    expect(options.method).toBe('DELETE');
+    expect(options.headers).toMatchObject({
+      Authorization: 'Bearer firebase-id-token',
+    });
+  });
+
+  it('propaga ApiError quando o back-end recusa', async () => {
+    respond(403, { status: 403, message: 'TRIP_FORBIDDEN' });
+
+    await expect(deleteTrip('trip-1')).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 403,
     });
   });
 });

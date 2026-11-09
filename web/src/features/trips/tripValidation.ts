@@ -46,6 +46,18 @@ export function formatActivityCount(count: number): string {
   return count === 1 ? '1 atividade' : `${count} atividades`;
 }
 
+export function formatItineraryCount(count: number): string {
+  return count === 1 ? '1 roteiro' : `${count} roteiros`;
+}
+
+export function formatPublicationCount(count: number): string {
+  return count === 1 ? '1 publicação' : `${count} publicações`;
+}
+
+export function formatFavoriteCount(count: number): string {
+  return count === 1 ? '1 favorito' : `${count} favoritos`;
+}
+
 export function formatDestination(destination: Destination): string {
   return [destination.city, destination.region, destination.country]
     .filter(Boolean)

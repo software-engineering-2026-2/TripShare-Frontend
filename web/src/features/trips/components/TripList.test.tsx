@@ -32,7 +32,14 @@ describe('TripList', () => {
   it('mostra o estado vazio e abre o formulário pelo botão', async () => {
     const user = userEvent.setup();
     const onNewTrip = vi.fn();
-    render(<TripList trips={[]} onNewTrip={onNewTrip} onEditTrip={vi.fn()} />);
+    render(
+      <TripList
+        trips={[]}
+        onNewTrip={onNewTrip}
+        onEditTrip={vi.fn()}
+        onDeleteTrip={vi.fn()}
+      />,
+    );
 
     expect(screen.getByText('Você ainda não tem viagens')).toBeInTheDocument();
 
@@ -42,7 +49,14 @@ describe('TripList', () => {
   });
 
   it('lista as viagens com destino, período e duração', () => {
-    render(<TripList trips={trips} onNewTrip={vi.fn()} onEditTrip={vi.fn()} />);
+    render(
+      <TripList
+        trips={trips}
+        onNewTrip={vi.fn()}
+        onEditTrip={vi.fn()}
+        onDeleteTrip={vi.fn()}
+      />,
+    );
 
     const items = screen.getAllByRole('listitem');
     expect(items).toHaveLength(2);
@@ -68,7 +82,12 @@ describe('TripList', () => {
     const user = userEvent.setup();
     const onEditTrip = vi.fn();
     render(
-      <TripList trips={trips} onNewTrip={vi.fn()} onEditTrip={onEditTrip} />,
+      <TripList
+        trips={trips}
+        onNewTrip={vi.fn()}
+        onEditTrip={onEditTrip}
+        onDeleteTrip={vi.fn()}
+      />,
     );
 
     await user.click(
@@ -76,5 +95,24 @@ describe('TripList', () => {
     );
 
     expect(onEditTrip).toHaveBeenCalledWith(trips[1]);
+  });
+
+  it('chama onDeleteTrip com a viagem do card clicado', async () => {
+    const user = userEvent.setup();
+    const onDeleteTrip = vi.fn();
+    render(
+      <TripList
+        trips={trips}
+        onNewTrip={vi.fn()}
+        onEditTrip={vi.fn()}
+        onDeleteTrip={onDeleteTrip}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole('button', { name: 'Excluir viagem Bate e volta' }),
+    );
+
+    expect(onDeleteTrip).toHaveBeenCalledWith(trips[1]);
   });
 });

@@ -1,8 +1,11 @@
 import { useState } from 'react';
+import DeleteTripDialog from '../features/trips/components/DeleteTripDialog';
 import TripForm from '../features/trips/components/TripForm';
 import TripList from '../features/trips/components/TripList';
 import {
   useCreateTrip,
+  useDeleteTrip,
+  useTripDeletionSummary,
   useTrips,
   useUpdateTrip,
 } from '../features/trips/useTrips';
@@ -20,6 +23,9 @@ export default function MyTripsPage() {
   const updateTripMutation = useUpdateTrip();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
+  const [deletingTrip, setDeletingTrip] = useState<Trip | null>(null);
+  const deletionSummary = useTripDeletionSummary(deletingTrip?.id);
+  const deleteTripMutation = useDeleteTrip();
 
   async function handleCreateTrip(input: CreateTripInput) {
     await createTripMutation.mutateAsync(input);
@@ -45,6 +51,12 @@ export default function MyTripsPage() {
   function closeForm() {
     setIsFormOpen(false);
     setEditingTrip(null);
+  }
+
+  async function handleDeleteTrip() {
+    if (!deletingTrip) return;
+    await deleteTripMutation.mutateAsync(deletingTrip.id);
+    setDeletingTrip(null);
   }
 
   return (
@@ -86,6 +98,7 @@ export default function MyTripsPage() {
             trips={trips}
             onNewTrip={openNewTripForm}
             onEditTrip={openEditTripForm}
+            onDeleteTrip={setDeletingTrip}
           />
         )}
       </div>
@@ -110,6 +123,19 @@ export default function MyTripsPage() {
             />
           </section>
         </div>
+      )}
+
+      {deletingTrip && (
+        <DeleteTripDialog
+          key={deletingTrip.id}
+          trip={deletingTrip}
+          summary={deletionSummary.data}
+          isLoadingSummary={deletionSummary.isPending}
+          isSummaryError={deletionSummary.isError}
+          onRetrySummary={() => deletionSummary.refetch()}
+          onConfirm={handleDeleteTrip}
+          onCancel={() => setDeletingTrip(null)}
+        />
       )}
     </main>
   );
