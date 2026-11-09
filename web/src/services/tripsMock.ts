@@ -81,6 +81,11 @@ function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Mesmo 404 que o back devolve para TripException.TRIP_NOT_FOUND.
+function tripNotFound() {
+  return new ApiError(404, { status: 404, message: 'Trip not found' });
+}
+
 export async function mockGetTrips(): Promise<Trip[]> {
   await wait(500);
   return [...trips];
@@ -101,7 +106,7 @@ export async function mockUpdateTrip(
   const index = trips.findIndex((trip) => trip.id === id);
 
   if (index === -1) {
-    throw new Error('Viagem não encontrada');
+    throw tripNotFound();
   }
 
   // Simula o 409 do back-end: dias além da nova duração que já têm atividades.
@@ -174,6 +179,7 @@ export async function mockGetTripDeletionSummary(
   id: string,
 ): Promise<TripDeletionSummary> {
   await wait(300);
+  if (!trips.some((trip) => trip.id === id)) throw tripNotFound();
   return (
     deletionSummaryByTrip[id] ?? {
       itineraryCount: 0,
@@ -188,7 +194,7 @@ export async function mockDeleteTrip(id: string): Promise<void> {
   const index = trips.findIndex((trip) => trip.id === id);
 
   if (index === -1) {
-    throw new Error('Viagem não encontrada');
+    throw tripNotFound();
   }
 
   trips.splice(index, 1);

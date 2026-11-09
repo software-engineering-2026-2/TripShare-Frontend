@@ -174,6 +174,19 @@ describe('updateTrip', () => {
       resolutions,
     });
   });
+
+  it.each([
+    [403, 'You do not own this trip'],
+    [404, 'Trip not found'],
+  ])('propaga ApiError %i do back-end', async (status, message) => {
+    respond(status, { status, message });
+
+    const { id, ...input } = trip;
+    await expect(updateTrip(id, input)).rejects.toMatchObject({
+      name: 'ApiError',
+      status,
+    });
+  });
 });
 
 describe('getTripDeletionSummary', () => {
@@ -210,12 +223,15 @@ describe('deleteTrip', () => {
     });
   });
 
-  it('propaga ApiError quando o back-end recusa', async () => {
-    respond(403, { status: 403, message: 'TRIP_FORBIDDEN' });
+  it.each([
+    [403, 'You do not own this trip'],
+    [404, 'Trip not found'],
+  ])('propaga ApiError %i do back-end', async (status, message) => {
+    respond(status, { status, message });
 
     await expect(deleteTrip('trip-1')).rejects.toMatchObject({
       name: 'ApiError',
-      status: 403,
+      status,
     });
   });
 });

@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ApiError } from '../../../services/api';
 import type { Destination } from '../../../services/tripsService';
 import TripForm from './TripForm';
 
@@ -164,6 +165,26 @@ describe('TripForm', () => {
       screen.getByText('Não foi possível buscar o destino. Tente novamente.'),
     ).toBeInTheDocument();
     expect(props.onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Criar viagem' })).toBeEnabled();
+  });
+
+  it('trata 404 na criação como erro genérico, sem bloquear o envio', async () => {
+    const { user } = renderForm({
+      onSubmit: vi
+        .fn()
+        .mockRejectedValue(
+          new ApiError(404, { status: 404, message: 'Destination not found' }),
+        ),
+    });
+
+    await fillForm(user);
+    await submit(user);
+
+    expect(
+      await screen.findByText(
+        'Não foi possível criar a viagem. Tente novamente.',
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Criar viagem' })).toBeEnabled();
   });
 

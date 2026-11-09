@@ -131,7 +131,7 @@ export default function MyTripsPage() {
           trip={deletingTrip}
           summary={deletionSummary.data}
           isLoadingSummary={deletionSummary.isPending}
-          isSummaryError={deletionSummary.isError}
+          summaryError={deletionSummary.error}
           onRetrySummary={() => deletionSummary.refetch()}
           onConfirm={handleDeleteTrip}
           onCancel={() => setDeletingTrip(null)}

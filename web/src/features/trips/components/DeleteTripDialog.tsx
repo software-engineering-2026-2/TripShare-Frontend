@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Trip, TripDeletionSummary } from '../../../services/tripsService';
+import { getTripAccessErrorMessage } from '../tripAccessError';
 import {
   formatFavoriteCount,
   formatItineraryCount,
@@ -10,7 +11,8 @@ interface DeleteTripDialogProps {
   trip: Trip;
   summary?: TripDeletionSummary;
   isLoadingSummary: boolean;
-  isSummaryError: boolean;
+  // Erro da busca do resumo; null quando não houve.
+  summaryError: unknown;
   onRetrySummary: () => void;
   onConfirm: () => Promise<void>;
   onCancel: () => void;
@@ -20,13 +22,19 @@ export default function DeleteTripDialog({
   trip,
   summary,
   isLoadingSummary,
-  isSummaryError,
+  summaryError,
   onRetrySummary,
   onConfirm,
   onCancel,
 }: DeleteTripDialogProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState('');
+  // 403/404 no DELETE: excluir de novo não adianta.
+  const [isAccessDenied, setIsAccessDenied] = useState(false);
+  const summaryAccessErrorMessage = getTripAccessErrorMessage(
+    summaryError,
+    'excluir',
+  );
 
   async function handleConfirm() {
     setIsDeleting(true);
@@ -34,8 +42,16 @@ export default function DeleteTripDialog({
 
     try {
       await onConfirm();
-    } catch {
-      setError('Não foi possível excluir a viagem. Tente novamente.');
+    } catch (deleteError) {
+      const accessErrorMessage = getTripAccessErrorMessage(
+        deleteError,
+        'excluir',
+      );
+      setIsAccessDenied(Boolean(accessErrorMessage));
+      setError(
+        accessErrorMessage ??
+          'Não foi possível excluir a viagem. Tente novamente.',
+      );
       setIsDeleting(false);
     }
   }
@@ -60,7 +76,13 @@ export default function DeleteTripDialog({
             </p>
           )}
 
-          {isSummaryError && (
+          {summaryAccessErrorMessage && (
+            <p className="trip-delete__status" role="alert">
+              {summaryAccessErrorMessage}
+            </p>
+          )}
+
+          {Boolean(summaryError) && !summaryAccessErrorMessage && (
             <div className="trip-delete__status" role="alert">
               <p>Não foi possível verificar o que será removido.</p>
               <button
@@ -102,7 +124,7 @@ export default function DeleteTripDialog({
             className="form-button trip-delete__confirm"
             type="button"
             onClick={handleConfirm}
-            disabled={!summary || isDeleting}
+            disabled={!summary || isDeleting || isAccessDenied}
           >
             {isDeleting ? 'Excluindo...' : 'Excluir viagem'}
           </button>

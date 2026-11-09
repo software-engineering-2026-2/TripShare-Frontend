@@ -130,6 +130,33 @@ describe('TripForm em modo de edição', () => {
     ).toBeInTheDocument();
   });
 
+  it.each([
+    [
+      403,
+      'You do not own this trip',
+      'Você não tem permissão para alterar esta viagem.',
+    ],
+    [404, 'Trip not found', 'Esta viagem não existe mais.'],
+  ])(
+    'no %i do back-end mostra o motivo e não deixa salvar de novo',
+    async (status, message, expected) => {
+      const user = userEvent.setup();
+      renderEditForm(
+        vi.fn().mockRejectedValue(new ApiError(status, { status, message })),
+      );
+
+      await user.click(
+        screen.getByRole('button', { name: 'Salvar alterações' }),
+      );
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(expected);
+      expect(
+        screen.getByRole('button', { name: 'Salvar alterações' }),
+      ).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Cancelar' })).toBeEnabled();
+    },
+  );
+
   it('lista os dias em conflito quando o back-end recusa a redução do período', async () => {
     const user = userEvent.setup();
     renderEditForm(

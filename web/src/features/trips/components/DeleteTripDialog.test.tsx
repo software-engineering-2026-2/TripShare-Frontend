@@ -2,6 +2,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ComponentProps } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ApiError } from '../../../services/api';
 import DeleteTripDialog from './DeleteTripDialog';
 
 afterEach(cleanup);
@@ -19,6 +20,12 @@ const trip = {
   endDate: '2027-01-20',
 };
 
+const forbidden = new ApiError(403, {
+  status: 403,
+  message: 'You do not own this trip',
+});
+const notFound = new ApiError(404, { status: 404, message: 'Trip not found' });
+
 const summary = {
   itineraryCount: 3,
   publishedItineraryCount: 1,
@@ -32,7 +39,7 @@ function renderDialog(
     trip,
     summary,
     isLoadingSummary: false,
-    isSummaryError: false,
+    summaryError: null,
     onRetrySummary: vi.fn(),
     onConfirm: vi.fn().mockResolvedValue(undefined),
     onCancel: vi.fn(),
@@ -100,7 +107,7 @@ describe('DeleteTripDialog', () => {
   it('mostra erro do resumo, permite tentar de novo e não deixa excluir', async () => {
     const { user, props } = renderDialog({
       summary: undefined,
-      isSummaryError: true,
+      summaryError: new Error('rede'),
     });
 
     expect(
@@ -152,4 +159,39 @@ describe('DeleteTripDialog', () => {
     expect(screen.getByRole('alertdialog')).toBeInTheDocument();
     expect(confirmButton()).toBeEnabled();
   });
+
+  it.each([
+    [forbidden, 'Você não tem permissão para excluir esta viagem.'],
+    [notFound, 'Esta viagem não existe mais.'],
+  ])(
+    'no resumo com %s mostra o motivo, sem tentar de novo nem excluir',
+    (summaryError, message) => {
+      renderDialog({ summary: undefined, summaryError });
+
+      expect(screen.getByRole('alert')).toHaveTextContent(message);
+      expect(
+        screen.queryByRole('button', { name: 'Tentar novamente' }),
+      ).not.toBeInTheDocument();
+      expect(confirmButton()).toBeDisabled();
+    },
+  );
+
+  it.each([
+    [forbidden, 'Você não tem permissão para excluir esta viagem.'],
+    [notFound, 'Esta viagem não existe mais.'],
+  ])(
+    'na exclusão com %s mostra o motivo e não deixa excluir de novo',
+    async (error, message) => {
+      const { user } = renderDialog({
+        onConfirm: vi.fn().mockRejectedValue(error),
+      });
+
+      await user.click(confirmButton());
+
+      expect(await screen.findByText(message)).toBeInTheDocument();
+      expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+      expect(confirmButton()).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Cancelar' })).toBeEnabled();
+    },
+  );
 });

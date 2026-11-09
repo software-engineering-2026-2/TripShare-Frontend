@@ -11,6 +11,7 @@ import {
   type DayConflict,
   type DayResolution,
 } from '../periodConflicts';
+import { getTripAccessErrorMessage } from '../tripAccessError';
 import {
   END_BEFORE_START_MESSAGE,
   formatDayCount,
@@ -85,6 +86,8 @@ export default function TripForm({
   >({});
   const [resolutionError, setResolutionError] = useState('');
   const [loading, setLoading] = useState(false);
+  // 403/404 no PATCH: a viagem não é do usuário ou foi excluída, então salvar de novo não adianta.
+  const [isAccessDenied, setIsAccessDenied] = useState(false);
 
   const days = getTripDays(values.startDate, values.endDate);
   const submitLabel = isEditing ? 'Salvar alterações' : 'Criar viagem';
@@ -245,6 +248,15 @@ export default function TripForm({
         setSubmitError(
           'Os dias em conflito mudaram. Salve novamente para ver a lista atualizada.',
         );
+        return;
+      }
+
+      const accessErrorMessage =
+        isEditing && getTripAccessErrorMessage(error, 'alterar');
+
+      if (accessErrorMessage) {
+        setIsAccessDenied(true);
+        setSubmitError(accessErrorMessage);
         return;
       }
 
@@ -438,7 +450,7 @@ export default function TripForm({
         <button
           className="form-button my-trips__primary-button"
           type="submit"
-          disabled={loading}
+          disabled={loading || isAccessDenied}
         >
           {loading ? loadingLabel : submitLabel}
         </button>
