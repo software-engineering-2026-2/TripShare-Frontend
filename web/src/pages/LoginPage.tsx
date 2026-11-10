@@ -1,10 +1,13 @@
 
+import { useNavigate } from 'react-router-dom';
 import LoginForm from '../features/auth/components/LoginForm';
 import '../css/login.css';
 // import { login, getCurrentUserProfile } from '../services/authService';
 import { login } from '../services/authService';
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+
   async function handleLogin(email: string, password: string) {
     await login(email, password);
     //await getCurrentUserProfile();
@@ -13,6 +16,8 @@ export default function LoginPage() {
     //'Usuário autenticado:',
     //auth.currentUser?.email,
     //);
+
+    navigate('/minhas-viagens');
   }
 
   return (
