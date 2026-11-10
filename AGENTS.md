@@ -111,7 +111,8 @@ Os turnos do cronograma diário e os pins do mapa mantêm cores semânticas fixa
 
 ## Fluxo de trabalho
 
-- considere a branch atual US<N> em que N é o número da US referente ao arquivo da Etapa.
+- Trabalhe na branch da task, `task/REF<N>-T<NN>-<descricao-curta>`, criada a partir de `REF<N>`. O fluxo de integracao e `task → REF<N> → development → main`, com `main` recebendo PR apenas ao final da etapa. Nunca commite em `main`, `development` ou `REF<N>`.
+- Para commits e PRs, siga as regras em `.claude/skills/conventional-commit/SKILL.md` e `.claude/skills/create-pr/SKILL.md`. Elas valem para qualquer agente, nao so para o Claude Code.
 - Preserve mudancas existentes feitas pelo usuario.
 - Antes de editar, verifique se o arquivo ja existe e se ha convencoes locais relevantes.
 - Prefira mudancas pequenas, diretas e alinhadas ao padrao do projeto.
