@@ -108,50 +108,63 @@ Os turnos do cronograma diário e os pins do mapa mantêm cores semânticas fixa
 
 
 ## Project Instructions
-## Idioma
 
-- Responda preferencialmente em portugues do Brasil.
-- Mantenha explicacoes objetivas, com passos claros quando houver uma tarefa pratica.
+### Language
 
-## Fluxo de trabalho
+- Respond and write project documentation in Brazilian Portuguese.
+- Keep explanations concise, with clear steps for practical tasks.
+- Preserve the names of commands, APIs, files, and technical identifiers.
+- Follow existing conventions for naming and code comments.
+- Keep third-party skills in their original language.
 
-- Trabalhe na branch da task, `task/REF<N>-T<NN>-<descricao-curta>`, criada a partir de `REF<N>`. O fluxo de integracao e `task → REF<N> → development → main`, com `main` recebendo PR apenas ao final da etapa. Nunca commite em `main`, `development` ou `REF<N>`.
-- Para commits e PRs, siga as regras em `.claude/skills/conventional-commit/SKILL.md` e `.claude/skills/create-pr/SKILL.md`. Elas valem para qualquer agente, nao so para o Claude Code.
-- Preserve mudancas existentes feitas pelo usuario.
-- Antes de editar, verifique se o arquivo ja existe e se ha convencoes locais relevantes.
-- Prefira mudancas pequenas, diretas e alinhadas ao padrao do projeto.
+### Workflow
+
+- Work on the current `US<N>` branch, where `N` is the user story number associated with the stage file.
+- Preserve existing changes made by the user.
+- Before editing, check whether the file already exists and whether relevant local conventions apply.
+- Prefer small, straightforward changes consistent with the project's conventions.
+- At the start of every task, check the repository's `docs/` directory.
+- Read `docs/README.md`, when available, to identify relevant documentation.
+- Before planning or editing files, read the documents relevant to the task,
+  including applicable requirements, business rules, and architectural decisions.
+- Follow links to additional documents when needed to understand the task.
+- Treat proposals and open questions as unconfirmed; do not assume they are
+  approved requirements.
+- If documentation conflicts with the implementation or the user's request,
+  report the discrepancy and clarify it when necessary.
+- Update affected documentation when an approved change alters the documented
+  behavior.
+
+### File Editing
+
+- Use clear English names for new files and directories.
+- Avoid refactoring outside the requested scope.
+- Do not remove code, files, or configuration without a clear need.
+- Add comments only when they help explain a non-obvious decision.
+
+### Verification
+
+- When changing code, run the available tests, lint checks, or validation commands relevant to the changes.
+- If automated validation is not possible, explain what was checked manually.
+- Report any limitations encountered during execution.
+
+### Delivery
+
+- Summarize the changes made.
+- Reference modified files using clear paths.
+- Suggest next steps only when they are useful
 
 ## Skills
 
-As skills ficam em `.claude/skills/<nome>/SKILL.md`. O Claude Code as carrega sozinho quando o pedido combina com a `description` de cada uma; outros agentes devem ler o `SKILL.md` correspondente antes de comecar a tarefa. Em caso de conflito entre uma skill e este arquivo, este arquivo vence.
-
-| Skill | Use quando | Ajustes para este projeto |
-| --- | --- | --- |
-| `conventional-commit` | For commitar | Skill da equipe. |
-| `create-pr` | For abrir um PR | Skill da equipe. |
-| `frontend-design` | For criar uma tela nova ou redesenhar uma existente | A paleta *Copacabana Ocean* e os tokens acima sao o brief visual fixo: nao proponha outra paleta, outras fontes ou Tailwind. A liberdade criativa fica no layout, na hierarquia e nos textos da tela. |
-| `web-design-guidelines` | For revisar uma tela (acessibilidade, foco, formularios, textos) antes do PR | Baixa as regras de `raw.githubusercontent.com/vercel-labs/web-interface-guidelines` a cada uso, entao precisa de internet. Aponte os arquivos da tela (`web/src/pages/...`, `web/src/features/...`, `web/src/css/...`). |
-| `vercel-react-best-practices` | For escrever ou revisar componentes e hooks React | O app e uma SPA com Vite, sem Next.js e sem SSR: ignore as regras `server-*`, `rendering-hydration-*` e `async-api-routes`. Troque `next/dynamic` por `React.lazy`. Nao adicione SWR nem `better-all`: o cache de dados e do TanStack Query. |
-| `tanstack-query-best-practices` | For criar ou alterar queries e mutations | O `QueryClient` fica em `web/src/lib/queryClient.ts`; os hooks ficam em `web/src/features/<area>/use*.ts` e chamam `web/src/services/`. Ignore as regras `ssr-*`. |
-| `firebase-auth-basics` | For mexer no login com Firebase | O Firebase so e usado para Auth (`web/src/lib/firebase.ts`). Use apenas `references/client_sdk_web.md`. Nunca rode `firebase deploy`, `projects:create` ou outro comando que altere o projeto no Firebase sem confirmacao do usuario. |
-
-As skills externas (todas menos `conventional-commit` e `create-pr`) estao registradas em `skills-lock.json`. Nao edite os arquivos delas: uma atualizacao com `npx skills update` sobrescreve tudo. Ajustes para o projeto vao nesta secao.
-
-## Edicao de arquivos
-
-- Use nomes de arquivos e diretorios claros em Inglês.
-- Evite refatoracoes fora do escopo solicitado.
-- Nao remova codigo, arquivos ou configuracoes sem necessidade clara.
-- Inclua comentarios apenas quando ajudarem a entender uma decisao nao obvia.
-
-## Verificacao
-
-- Quando houver codigo, execute testes, lint ou comandos de validacao disponiveis.
-- Se nao for possivel validar automaticamente, explique o que foi verificado manualmente.
-- Informe qualquer limitacao encontrada durante a execucao.
-
-## Entrega
-
-- Resuma as alteracoes feitas.
-- Cite arquivos alterados usando caminhos claros.
-- Sugira proximos passos apenas quando forem realmente uteis.
+- At the start of every task, inspect the skills available in
+  `.agents/skills/`, relative to the repository root.
+- Review each skill's `name` and `description` to identify which skills
+  apply to the task and the project's stack.
+- Before performing work covered by a skill, read its full `SKILL.md`
+  and follow the applicable instructions.
+- Load referenced documents, scripts, and templates only when needed.
+- Briefly state which skills you are using and why.
+- If no skill applies, proceed using the repository's instructions.
+- Reassess applicable skills if the task's scope changes.
+- If a required skill is missing or unreadable, report the limitation
+  and do not claim to have followed it.
