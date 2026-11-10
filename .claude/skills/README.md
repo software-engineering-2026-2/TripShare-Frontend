@@ -2,19 +2,40 @@
 
 Esta pasta guarda as skills que o [Claude Code](https://docs.claude.com/en/docs/claude-code) usa neste repositório. Uma skill é um arquivo `SKILL.md` com instruções que o Claude carrega sozinho quando o pedido combina com a `description` do cabeçalho. Por exemplo, ao ouvir "commita isso", ele segue a `conventional-commit`. Também dá para chamar uma skill pelo nome: `/conventional-commit` ou `/create-pr`.
 
-As regras vêm do documento **"Padrões de contribuição"** da equipe e do histórico de commits e PRs do repositório.
+As regras das skills da equipe vêm do documento **"Padrões de contribuição"** e do histórico de commits e PRs do repositório. As skills externas vêm de repositórios públicos no GitHub, e os ajustes delas para o TripShare ficam na seção **Skills** do `AGENTS.md`.
 
-## Skills
+## Skills da equipe
 
 | Skill | Quando é usada | O que faz |
 | --- | --- | --- |
 | [`conventional-commit`](conventional-commit/SKILL.md) | Antes de qualquer `git commit` | Impede commit em `main`, `development` e `REF<N>`. Monta a mensagem em Conventional Commits, em português. Roda lint, typecheck e testes antes de commitar. |
 | [`create-pr`](create-pr/SKILL.md) | "Abrir PR", "criar PR" | Escolhe a base pelo fluxo `task → REF<N> → development → main`. Confere os commits, valida o projeto, monta título e corpo no padrão da equipe e cria o PR com revisor (tirado da planilha) e labels. |
+
+## Skills externas
+
+| Skill | Origem | Quando é usada |
+| --- | --- | --- |
+| [`frontend-design`](frontend-design/SKILL.md) | [anthropics/skills](https://github.com/anthropics/skills) | Criar ou redesenhar telas |
+| [`web-design-guidelines`](web-design-guidelines/SKILL.md) | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | Revisar acessibilidade e UX de uma tela |
+| [`vercel-react-best-practices`](vercel-react-best-practices/SKILL.md) | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | Escrever ou revisar componentes React |
+| [`tanstack-query-best-practices`](tanstack-query-best-practices/SKILL.md) | [deckardger/tanstack-agent-skills](https://github.com/deckardger/tanstack-agent-skills) | Criar ou alterar queries e mutations |
+| [`firebase-auth-basics`](firebase-auth-basics/SKILL.md) | [firebase/agent-skills](https://github.com/firebase/agent-skills) | Mexer no login com Firebase |
+
+Elas foram instaladas com a CLI [`skills`](https://skills.sh), que registra a origem e o hash de cada uma em `skills-lock.json`, na raiz do repositório. Não edite os arquivos dessas pastas: a atualização sobrescreve tudo. Para atualizar:
+
+```bash
+npx skills update
+```
+
+Revise o diff antes de commitar a atualização. As skills rodam com as mesmas permissões do agente.
+
 ## Requisitos
 
 ### 1. Claude Code
 
-Abra o Claude Code na **raiz do repositório** (`TripShare-Frontend/`). As skills de projeto só são carregadas a partir de `.claude/skills/` do diretório de trabalho. Para conferir, digite `/` no prompt: as duas skills devem aparecer na lista.
+Abra o Claude Code na **raiz do repositório** (`TripShare-Frontend/`). As skills de projeto só são carregadas a partir de `.claude/skills/` do diretório de trabalho. Para conferir, digite `/` no prompt: as skills das duas tabelas acima devem aparecer na lista.
+
+O Claude Code lê o `CLAUDE.md`, não o `AGENTS.md`. Por isso o `CLAUDE.md` da raiz só importa o `AGENTS.md` (`@AGENTS.md`): as regras ficam num lugar só e valem para qualquer agente.
 
 ### 2. GitHub CLI (`gh`), usada pela `create-pr`
 

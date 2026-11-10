@@ -71,28 +71,32 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 A identidade visual oficial do projeto utiliza o tema **Copacabana Ocean**, inspirado na orla e no mar do Rio de Janeiro, combinando tons de azul oceânico com superfícies claras e frescas.
 
-### Tokens Principais (CSS Variables em `app/globals.css`)
+### Tokens Principais (CSS Variables em `web/src/index.css`)
+
+Os estilos são escritos em CSS puro: variáveis globais em `web/src/index.css` e um arquivo por tela em `web/src/css/`. O projeto não usa Tailwind nem biblioteca de componentes. Use a variável da tabela em vez do hex solto. Quando a variável ainda não existir, crie-a em `web/src/index.css` com o prefixo `--color-` e o hex da tabela.
 
 | Token | Variável CSS | Hex | Uso Principal |
 | :--- | :--- | :--- | :--- |
-| **Primary** | `--primary` | `#0077B6` | Botões principais, ícones de destaque, links ativos e badges |
-| **Primary Foreground** | `--primary-foreground` | `#FFFFFF` | Texto e ícones sobre elementos `--primary` |
-| **Brand Gradient (From)** | `--brand-from` | `#0096C7` | Início do gradiente de ações de destaque (ex.: *Distribuir Viagem*, *Gerar Roteiro*) |
-| **Brand Gradient (To)** | `--brand-to` | `#023E8A` | Fim do gradiente de ações de destaque |
-| **Background** | `--background` | `#F8FDFF` | Fundo geral das páginas (branco gelo suave) |
-| **Foreground** | `--foreground` | `#0A2540` | Texto principal e títulos (azul-marinho profundo) |
-| **Card / Popover** | `--card` / `--popover` | `#FFFFFF` | Superfície de cartões, modais e popovers |
-| **Secondary / Muted** | `--secondary` / `--muted` | `#EBF5F8` | Fundos secundários, áreas agrupadas e containers sutis |
-| **Muted Foreground** | `--muted-foreground` | `#4A6B82` | Textos de apoio, legendas, horários e metadados |
-| **Accent** | `--accent` | `#E0F0F6` | Estado de hover em botões secundários, menus e itens selecionáveis |
-| **Border** | `--border` | `#D8E8F0` | Divisórias, bordas de cartões e contornos |
-| **Input** | `--input` | `#C5DCE8` | Bordas de campos de formulário e seletores |
-| **Ring** | `--ring` | `#0077B6` | Anel de foco de acessibilidade (`focus-visible`) |
-| **Destructive** | `--destructive` | `#C13515` | Alertas de conflito de horário e ações de exclusão |
+| **Primary** | `--color-primary` | `#0077B6` | Botões principais, ícones de destaque, links ativos e badges |
+| **Primary Foreground** | `--color-on-primary` | `#FFFFFF` | Texto e ícones sobre elementos `--color-primary` |
+| **Brand Gradient (From)** | ainda não existe | `#0096C7` | Início do gradiente de ações de destaque (ex.: *Distribuir Viagem*, *Gerar Roteiro*) |
+| **Brand Gradient (To)** | `--color-primary-hover` (mesmo hex) | `#023E8A` | Fim do gradiente de ações de destaque |
+| **Background** | ainda não existe | `#F8FDFF` | Fundo geral das páginas (branco gelo suave) |
+| **Foreground** | `--color-text` | `#0A2540` | Texto principal e títulos (azul-marinho profundo) |
+| **Card / Popover** | `--color-surface` | `#FFFFFF` | Superfície de cartões, modais e popovers |
+| **Secondary / Muted** | `--color-surface-muted` | `#EBF5F8` | Fundos secundários, áreas agrupadas e containers sutis |
+| **Muted Foreground** | `--color-text-muted` | `#4A6B82` | Textos de apoio, legendas, horários e metadados |
+| **Accent** | ainda não existe | `#E0F0F6` | Estado de hover em botões secundários, menus e itens selecionáveis |
+| **Border** | `--color-border` | `#D8E8F0` | Divisórias, bordas de cartões e contornos |
+| **Input** | `--color-border-strong` | `#C5DCE8` | Bordas de campos de formulário e seletores |
+| **Ring** | `--color-focus-ring`, `--color-focus-ring-soft`, `--color-focus-ring-strong` | `#0077B6` (com transparência) | Anel de foco de acessibilidade (`focus-visible`) |
+| **Destructive** | `--color-danger` (fundo: `--color-danger-bg`) | `#C13515` | Alertas de conflito de horário e ações de exclusão |
+
+Não use `--accent`, `--accent-bg` nem `--accent-border` de `web/src/index.css`: são sobras do template do Vite (`#AA3BFF`) e não fazem parte da paleta.
 
 ### Cores Semânticas dos Turnos do Roteiro
 
-Os turnos do cronograma diário e os pins do mapa mantêm cores semânticas fixas para rápida identificação visual:
+Os turnos do cronograma diário e os pins do mapa mantêm cores semânticas fixas para rápida identificação visual. Essas variáveis ainda não existem no código; ao criá-las, use os nomes abaixo em `web/src/index.css`:
 
 | Turno | Horário | Variável CSS | Hex | Texto (`onColor`) |
 | :--- | :--- | :--- | :--- | :--- |
@@ -116,6 +120,22 @@ Os turnos do cronograma diário e os pins do mapa mantêm cores semânticas fixa
 - Preserve mudancas existentes feitas pelo usuario.
 - Antes de editar, verifique se o arquivo ja existe e se ha convencoes locais relevantes.
 - Prefira mudancas pequenas, diretas e alinhadas ao padrao do projeto.
+
+## Skills
+
+As skills ficam em `.claude/skills/<nome>/SKILL.md`. O Claude Code as carrega sozinho quando o pedido combina com a `description` de cada uma; outros agentes devem ler o `SKILL.md` correspondente antes de comecar a tarefa. Em caso de conflito entre uma skill e este arquivo, este arquivo vence.
+
+| Skill | Use quando | Ajustes para este projeto |
+| --- | --- | --- |
+| `conventional-commit` | For commitar | Skill da equipe. |
+| `create-pr` | For abrir um PR | Skill da equipe. |
+| `frontend-design` | For criar uma tela nova ou redesenhar uma existente | A paleta *Copacabana Ocean* e os tokens acima sao o brief visual fixo: nao proponha outra paleta, outras fontes ou Tailwind. A liberdade criativa fica no layout, na hierarquia e nos textos da tela. |
+| `web-design-guidelines` | For revisar uma tela (acessibilidade, foco, formularios, textos) antes do PR | Baixa as regras de `raw.githubusercontent.com/vercel-labs/web-interface-guidelines` a cada uso, entao precisa de internet. Aponte os arquivos da tela (`web/src/pages/...`, `web/src/features/...`, `web/src/css/...`). |
+| `vercel-react-best-practices` | For escrever ou revisar componentes e hooks React | O app e uma SPA com Vite, sem Next.js e sem SSR: ignore as regras `server-*`, `rendering-hydration-*` e `async-api-routes`. Troque `next/dynamic` por `React.lazy`. Nao adicione SWR nem `better-all`: o cache de dados e do TanStack Query. |
+| `tanstack-query-best-practices` | For criar ou alterar queries e mutations | O `QueryClient` fica em `web/src/lib/queryClient.ts`; os hooks ficam em `web/src/features/<area>/use*.ts` e chamam `web/src/services/`. Ignore as regras `ssr-*`. |
+| `firebase-auth-basics` | For mexer no login com Firebase | O Firebase so e usado para Auth (`web/src/lib/firebase.ts`). Use apenas `references/client_sdk_web.md`. Nunca rode `firebase deploy`, `projects:create` ou outro comando que altere o projeto no Firebase sem confirmacao do usuario. |
+
+As skills externas (todas menos `conventional-commit` e `create-pr`) estao registradas em `skills-lock.json`. Nao edite os arquivos delas: uma atualizacao com `npx skills update` sobrescreve tudo. Ajustes para o projeto vao nesta secao.
 
 ## Edicao de arquivos
 
