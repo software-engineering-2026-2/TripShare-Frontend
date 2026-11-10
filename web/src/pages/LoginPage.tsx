@@ -1,5 +1,5 @@
 
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import LoginForm from '../features/auth/components/LoginForm';
 import '../css/login.css';
 // import { login, getCurrentUserProfile } from '../services/authService';
@@ -23,7 +23,7 @@ export default function LoginPage() {
   return (
     <main className="login-page">
       <section className="login-banner">
-        <a className="login-brand" href="/">tripshare</a>
+        <Link className="login-brand" to="/">tripshare</Link>
 
         <div className="login-banner-content">
           <h1>

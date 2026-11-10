@@ -16,7 +16,10 @@ function renderLoginPage() {
   return render(
     <MemoryRouter initialEntries={['/login']}>
       <Routes>
+        <Route path="/" element={<p>Página inicial</p>} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/cadastro" element={<p>Página de cadastro</p>} />
+        <Route path="/recuperar-senha" element={<p>Página de recuperar senha</p>} />
         <Route path="/minhas-viagens" element={<p>Página Minhas Viagens</p>} />
       </Routes>
     </MemoryRouter>,
@@ -62,4 +65,20 @@ describe('LoginPage', () => {
     ).toBeInTheDocument();
     expect(screen.queryByText('Página Minhas Viagens')).not.toBeInTheDocument();
   });
+
+  it.each([
+    ['tripshare', 'Página inicial'],
+    ['Esqueceu?', 'Página de recuperar senha'],
+    ['Criar conta gratuita', 'Página de cadastro'],
+  ])(
+    'o link "%s" navega sem recarregar a página',
+    async (linkName, destination) => {
+      const user = userEvent.setup();
+      renderLoginPage();
+
+      await user.click(screen.getByRole('link', { name: linkName }));
+
+      expect(await screen.findByText(destination)).toBeInTheDocument();
+    },
+  );
 });
