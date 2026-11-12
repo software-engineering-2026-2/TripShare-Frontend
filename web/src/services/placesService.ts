@@ -1,5 +1,5 @@
 import { request } from './api';
-import { mockGetPlaces } from './placesMock';
+import { mockGetPlace, mockGetPlaces } from './placesMock';
 
 // Remover junto com placesMock.ts quando o back-end estiver pronto.
 const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true';
@@ -23,6 +23,11 @@ export interface OpeningHours {
   closesNextDay: boolean;
 }
 
+export interface Coordinates {
+  latitude: number;
+  longitude: number;
+}
+
 export interface Place {
   id: string;
   name: string;
@@ -31,10 +36,19 @@ export interface Place {
   photo: PlacePhoto | null;
   // Lista vazia significa horário desconhecido, não local fechado.
   openingHours: OpeningHours[];
+  // Campos usados na tela de detalhes (RF-08); a lista de cards não depende deles.
+  description?: string | null;
+  coordinates?: Coordinates | null;
 }
 
 // Endpoint ainda não confirmado com o back-end.
 export function getPlaces(): Promise<Place[]> {
   if (USE_MOCKS) return mockGetPlaces();
   return request<Place[]>('/places');
+}
+
+// Endpoint previsto no back-end (RF-08): GET /places/{id}
+export function getPlace(id: string): Promise<Place> {
+  if (USE_MOCKS) return mockGetPlace(id);
+  return request<Place>(`/places/${encodeURIComponent(id)}`);
 }

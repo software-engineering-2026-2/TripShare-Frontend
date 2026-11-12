@@ -1,0 +1,128 @@
+.place-details-page,
+.place-details-page *,
+.place-details-page *::before,
+.place-details-page *::after {
+  box-sizing: border-box;
+}
+
+.place-details-page {
+  min-height: 100svh;
+  width: 100%;
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  color-scheme: light;
+  font-family: var(--sans);
+  text-align: left;
+}
+
+.place-details__container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  max-width: 768px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.place-details__back-button {
+  width: auto;
+  height: 44px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-hover);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.place-details__back-button:hover {
+  background: var(--color-surface-muted);
+  border-color: var(--color-border-strong);
+}
+
+.place-details__back-button:focus-visible {
+  outline: 3px solid var(--color-focus-ring-strong);
+  outline-offset: 2px;
+}
+
+.place-details__status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  color: var(--color-text-muted);
+  font-size: 16px;
+}
+
+.place-details {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  padding: 28px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+}
+
+.place-details__header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.place-details__categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.place-details__category {
+  padding: 4px 12px;
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.place-details__name {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+
+.place-details__section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.place-details__section-title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.place-details__text {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.place-details__map {
+  width: 100%;
+  height: 280px;
+  margin-top: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
