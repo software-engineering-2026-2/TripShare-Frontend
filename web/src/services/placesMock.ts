@@ -36,6 +36,10 @@ const places: Place[] = [
     description:
       'Estátua de Cristo de braços abertos no alto do Morro do Corcovado, com vista para a cidade.',
     coordinates: { latitude: -22.9519, longitude: -43.2105 },
+    address: 'Parque Nacional da Tijuca, Alto da Boa Vista',
+    estimatedDurationMinutes: 150,
+    cost: 'Ingresso a partir de R$ 75,00',
+    source: 'OpenStreetMap',
   },
   {
     id: '2',
@@ -50,6 +54,9 @@ const places: Place[] = [
     description:
       'Museu de ciências que explora as possibilidades de construção do futuro a partir das escolhas de hoje.',
     coordinates: { latitude: -22.8944, longitude: -43.1795 },
+    address: 'Praça Mauá, 1, Centro',
+    estimatedDurationMinutes: 90,
+    source: 'OpenStreetMap',
   },
   {
     id: '3',
@@ -65,6 +72,9 @@ const places: Place[] = [
       ...hours([6], '09:00', '17:00'),
     ],
     coordinates: { latitude: -22.9052, longitude: -43.1768 },
+    address: 'Rua Gonçalves Dias, 32, Centro',
+    estimatedDurationMinutes: 60,
+    source: 'Cadastro do TripShare',
   },
   {
     id: '4',

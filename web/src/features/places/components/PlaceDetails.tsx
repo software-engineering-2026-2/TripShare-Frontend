@@ -1,5 +1,10 @@
 import type { Coordinates, Place } from '../../../services/placesService';
 import { CATEGORY_LABELS } from '../placeFormat';
+import {
+  formatCoordinates,
+  formatDuration,
+  formatWeekHours,
+} from '../placeDetailsFormat';
 
 interface PlaceDetailsProps {
   place: Place;
@@ -20,6 +25,14 @@ function getMapEmbedUrl({ latitude, longitude }: Coordinates): string {
 }
 
 export default function PlaceDetails({ place }: PlaceDetailsProps) {
+  const hasOpeningHours = place.openingHours.length > 0;
+  const hasInfo = Boolean(
+    place.address ||
+    place.coordinates ||
+    place.estimatedDurationMinutes ||
+    place.cost,
+  );
+
   return (
     <article className="place-details" aria-labelledby="place-name">
       <header className="place-details__header">
@@ -56,6 +69,66 @@ export default function PlaceDetails({ place }: PlaceDetailsProps) {
           />
         )}
       </section>
+
+      {hasInfo && (
+        <section className="place-details__section">
+          <h2 className="place-details__section-title">Informações</h2>
+          <dl className="place-details__info-list">
+            {place.address && (
+              <div className="place-details__info-row">
+                <dt>Endereço</dt>
+                <dd>{place.address}</dd>
+              </div>
+            )}
+            {place.coordinates && (
+              <div className="place-details__info-row">
+                <dt>Coordenadas</dt>
+                <dd>{formatCoordinates(place.coordinates)}</dd>
+              </div>
+            )}
+            {!!place.estimatedDurationMinutes && (
+              <div className="place-details__info-row">
+                <dt>Duração estimada da visita</dt>
+                <dd>{formatDuration(place.estimatedDurationMinutes)}</dd>
+              </div>
+            )}
+            {place.cost && (
+              <div className="place-details__info-row">
+                <dt>Custos</dt>
+                <dd>{place.cost}</dd>
+              </div>
+            )}
+          </dl>
+        </section>
+      )}
+
+      {hasOpeningHours && (
+        <section className="place-details__section">
+          <h2 className="place-details__section-title">
+            Horário de funcionamento
+          </h2>
+          <dl className="place-details__info-list">
+            {formatWeekHours(place.openingHours).map(({ weekday, hours }) => (
+              <div className="place-details__info-row" key={weekday}>
+                <dt>{weekday}</dt>
+                <dd>{hours}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
+
+      {(hasOpeningHours || place.cost || place.source) && (
+        <footer className="place-details__footer">
+          {place.source && <p>Fonte das informações: {place.source}</p>}
+          {(hasOpeningHours || place.cost) && (
+            <p>
+              Horários e preços podem mudar. Confirme diretamente com o
+              estabelecimento.
+            </p>
+          )}
+        </footer>
+      )}
     </article>
   );
 }

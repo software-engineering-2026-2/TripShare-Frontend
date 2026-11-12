@@ -11,7 +11,7 @@ export const CATEGORY_LABELS: Record<PlaceCategory, string> = {
 };
 
 // O back-end pode enviar HH:MM:SS.
-function formatTime(time: string): string {
+export function formatTime(time: string): string {
   return time.slice(0, 5);
 }
 

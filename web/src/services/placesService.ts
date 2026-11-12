@@ -39,6 +39,12 @@ export interface Place {
   // Campos usados na tela de detalhes (RF-08); a lista de cards não depende deles.
   description?: string | null;
   coordinates?: Coordinates | null;
+  address?: string | null;
+  estimatedDurationMinutes?: number | null;
+  // Texto livre enquanto o formato de custos não é definido com o back-end.
+  cost?: string | null;
+  // De onde vieram as informações do local (ex.: OpenStreetMap).
+  source?: string | null;
 }
 
 // Endpoint ainda não confirmado com o back-end.
