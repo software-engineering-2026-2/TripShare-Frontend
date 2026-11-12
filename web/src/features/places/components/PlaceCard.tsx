@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { Place } from '../../../services/placesService';
 import { CATEGORY_LABELS, formatTodayHours } from '../placeFormat';
 
@@ -30,7 +31,12 @@ export default function PlaceCard({ place }: PlaceCardProps) {
           ))}
         </ul>
 
-        <h2 className="place-card__name">{place.name}</h2>
+        <h2 className="place-card__name">
+          {/* O link se estende pelo card todo (ver .place-card__link::after). */}
+          <Link className="place-card__link" to={`/locais/${place.id}`}>
+            {place.name}
+          </Link>
+        </h2>
 
         <p className="place-card__info">
           <span className="place-card__label">Bairro</span>
