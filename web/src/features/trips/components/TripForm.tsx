@@ -23,7 +23,14 @@ type TripErrors = Partial<Record<TripField, string>>;
 interface TripFormProps {
   onSubmit: (input: CreateTripInput) => Promise<void>;
   onCancel: () => void;
-  onSearchDestinations: (query: string) => Promise<Destination[]>;
+  onSearchDestinations: (
+    query: string,
+    page?: number,
+  ) => Promise<{
+    content: Destination[];
+    totalPages: number;
+    number: number;
+  }>;
   // Quando informada, o formulário abre preenchido para edição.
   trip?: Trip;
 }
@@ -66,6 +73,8 @@ export default function TripForm({
   const [destinationOptions, setDestinationOptions] = useState<Destination[]>(
     [],
   );
+  const [destinationPage, setDestinationPage] = useState(0);
+  const [destinationTotalPages, setDestinationTotalPages] = useState(0);
   const [selectedDestination, setSelectedDestination] =
     useState<Destination | null>(trip?.destination ?? null);
   const [submitError, setSubmitError] = useState('');
@@ -81,6 +90,8 @@ export default function TripForm({
 
     if (field === 'destination') {
       setDestinationOptions([]);
+      setDestinationPage(0);
+      setDestinationTotalPages(0);
       setSelectedDestination(null);
     }
 
@@ -127,7 +138,11 @@ export default function TripForm({
       return null;
     }
 
-    const results = await onSearchDestinations(values.destination.trim());
+    const result = await onSearchDestinations(
+      values.destination.trim(),
+      destinationPage,
+    );
+    const results = result.content;
 
     if (results.length === 0) {
       setErrors((currentErrors) => ({
@@ -139,11 +154,22 @@ export default function TripForm({
 
     if (results.length > 1) {
       setDestinationOptions(results);
+      setDestinationTotalPages(result.totalPages);
       return null;
     }
 
     setSelectedDestination(results[0]);
     return results[0];
+  }
+
+  async function handleDestinationPageChange(page: number) {
+    try {
+      const result = await onSearchDestinations(values.destination.trim(), page);
+      setDestinationOptions(result.content);
+      setDestinationPage(result.number);
+    } catch {
+      setSubmitError('Não foi possível buscar o destino. Tente novamente.');
+    }
   }
 
   async function handleSubmit() {
@@ -264,6 +290,9 @@ export default function TripForm({
           options={destinationOptions}
           selected={selectedDestination}
           onSelect={handleSelectDestination}
+          page={destinationPage}
+          totalPages={destinationTotalPages}
+          onPageChange={handleDestinationPageChange}
         />
       )}
 

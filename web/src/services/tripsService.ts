@@ -18,6 +18,12 @@ export interface Destination {
   country: string;
 }
 
+export interface DestinationPage {
+  content: Destination[];
+  totalPages: number;
+  number: number;
+}
+
 export interface Trip {
   id: string;
   title: string;
@@ -88,8 +94,15 @@ export function updateTrip(id: string, input: UpdateTripInput): Promise<Trip> {
   });
 }
 
-// Endpoint ainda não confirmado com o back-end.
-export function searchDestinations(query: string): Promise<Destination[]> {
-  if (USE_MOCKS) return mockSearchDestinations(query);
-  return request<Destination[]>(`/destinations?q=${encodeURIComponent(query)}`);
+export function searchDestinations(
+  query: string,
+  page = 0,
+): Promise<DestinationPage> {
+  if (USE_MOCKS) return mockSearchDestinations(query, page);
+  const params = new URLSearchParams({
+    destination: query,
+    page: String(page),
+    size: '5',
+  });
+  return request<DestinationPage>(`/places?${params.toString()}`);
 }

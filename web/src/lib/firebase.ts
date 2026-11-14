@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, type Auth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -11,6 +11,16 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUMENT_ID
 };
 
-const app = initializeApp(firebaseConfig);
+const hasFirebaseConfig = Object.values(firebaseConfig).every(Boolean);
 
-export const auth = getAuth(app);
+export const auth: Auth | null = hasFirebaseConfig
+  ? getAuth(initializeApp(firebaseConfig))
+  : null;
+
+export function requireAuth(): Auth {
+  if (!auth) {
+    throw new Error('Firebase não está configurado.');
+  }
+
+  return auth;
+}
