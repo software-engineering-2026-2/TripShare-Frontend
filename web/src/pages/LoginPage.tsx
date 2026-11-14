@@ -1,11 +1,17 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import LoginForm from '../features/auth/components/LoginForm';
 import '../css/login.css';
-// import { login, getCurrentUserProfile } from '../services/authService';
-import { login, loginWithGoogle } from '../services/authService';
+import { ApiError } from '../services/api';
+import {
+  getCurrentUserProfile,
+  login,
+  loginWithGoogle,
+} from '../services/authService';
 
 export default function LoginPage() {
+  const navigate = useNavigate();
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleError, setGoogleError] = useState('');
 
@@ -25,7 +31,14 @@ export default function LoginPage() {
 
     try {
       await loginWithGoogle();
-    } catch {
+      await getCurrentUserProfile();
+      navigate('/minhas-viagens', { replace: true });
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        navigate('/cadastro', { replace: true });
+        return;
+      }
+
       setGoogleError('Não foi possível entrar com o Google. Tente novamente.');
     } finally {
       setGoogleLoading(false);
