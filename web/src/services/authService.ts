@@ -1,7 +1,9 @@
 import { FirebaseError } from 'firebase/app';
 import {
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   type User,
 } from 'firebase/auth';
@@ -45,6 +47,14 @@ export async function login(email: string, password: string) {
     email,
     password,
   );
+
+  return credential.user;
+}
+
+export async function loginWithGoogle() {
+  const configuredAuth = requireAuth();
+  const provider = new GoogleAuthProvider();
+  const credential = await signInWithPopup(configuredAuth, provider);
 
   return credential.user;
 }

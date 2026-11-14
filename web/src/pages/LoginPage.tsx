@@ -1,10 +1,13 @@
 
+import { useState } from 'react';
 import LoginForm from '../features/auth/components/LoginForm';
 import '../css/login.css';
-// import { login, getCurrentUserProfile } from '../services/authService';
-import { login } from '../services/authService';
+import { login, loginWithGoogle } from '../services/authService';
 
 export default function LoginPage() {
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState('');
+
   async function handleLogin(email: string, password: string) {
     await login(email, password);
     //await getCurrentUserProfile();
@@ -13,6 +16,19 @@ export default function LoginPage() {
     //'Usuário autenticado:',
     //auth.currentUser?.email,
     //);
+  }
+
+  async function handleGoogleLogin() {
+    setGoogleError('');
+    setGoogleLoading(true);
+
+    try {
+      await loginWithGoogle();
+    } catch {
+      setGoogleError('Não foi possível entrar com o Google. Tente novamente.');
+    } finally {
+      setGoogleLoading(false);
+    }
   }
 
   return (
@@ -42,10 +58,16 @@ export default function LoginPage() {
             <p>Digite suas credenciais para continuar</p>
           </header>
 
-          <button className="login-google" type="button" disabled>
+          <button
+            className="login-google"
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={googleLoading}
+          >
             <span aria-hidden="true" className="google-symbol">G</span>
-            Continuar com o Google
+            {googleLoading ? 'Conectando...' : 'Continuar com o Google'}
           </button>
+          {googleError && <p className="login-error" role="alert">{googleError}</p>}
 
           <div className="login-divider">
             <span />
