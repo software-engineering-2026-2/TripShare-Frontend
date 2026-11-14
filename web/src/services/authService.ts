@@ -1,13 +1,23 @@
 import { FirebaseError } from 'firebase/app';
 import {
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   type User,
 } from 'firebase/auth';
 
 import { auth } from '../lib/firebase';
 import { ApiError, request } from './api';
+
+function requireAuth() {
+  if (!auth) {
+    throw new Error('Firebase não está configurado neste ambiente.');
+  }
+
+  return auth;
+}
 
 export interface RegisterProfileInput {
   username: string;
@@ -31,11 +41,20 @@ export interface UserProfile {
 }
 
 export async function login(email: string, password: string) {
+  const configuredAuth = requireAuth();
   const credential = await signInWithEmailAndPassword(
-    auth,
+    configuredAuth,
     email,
     password,
   );
+
+  return credential.user;
+}
+
+export async function loginWithGoogle() {
+  const configuredAuth = requireAuth();
+  const provider = new GoogleAuthProvider();
+  const credential = await signInWithPopup(configuredAuth, provider);
 
   return credential.user;
 }
@@ -44,9 +63,11 @@ async function createFirebaseUserOrRecover(
   email: string,
   password: string,
 ): Promise<User> {
+  const configuredAuth = requireAuth();
+
   try {
     const credential = await createUserWithEmailAndPassword(
-      auth,
+      configuredAuth,
       email,
       password,
     );
@@ -64,7 +85,7 @@ async function createFirebaseUserOrRecover(
     // anterior falhou após criar a conta). Recupera a sessão existente
     // para concluir apenas o cadastro do perfil.
     const credential = await signInWithEmailAndPassword(
-      auth,
+      configuredAuth,
       email,
       password,
     );
@@ -93,7 +114,7 @@ export async function register(
     if (error instanceof ApiError && error.status === 401) {
       // Token rejeitado pelo backend: encerra a sessão local criada
       // nesta tentativa para não deixar estado inconsistente.
-      await signOut(auth);
+      await signOut(requireAuth());
     }
 
     throw error;
@@ -101,7 +122,7 @@ export async function register(
 }
 
 export async function getIdToken() {
-  const user = auth.currentUser;
+  const user = requireAuth().currentUser;
 
   if (!user) {
     throw new Error('Usuário não autenticado.');
@@ -121,7 +142,8 @@ export async function getCurrentUserProfile(): Promise<UserProfile> {
 }
 
 export async function logout() {
-  const user = auth.currentUser;
+  const configuredAuth = requireAuth();
+  const user = configuredAuth.currentUser;
 
   if (!user) {
     return;
@@ -137,6 +159,6 @@ export async function logout() {
       },
     });
   } finally {
-    await signOut(auth);
+    await signOut(configuredAuth);
   }
 }
