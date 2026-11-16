@@ -1,9 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { authMock, createUserMock, signInMock, signOutMock } = vi.hoisted(() => ({
+const {
+  authMock,
+  createUserMock,
+  googleProviderMock,
+  signInMock,
+  signInWithPopupMock,
+  signOutMock,
+} = vi.hoisted(() => ({
   authMock: { currentUser: null },
   createUserMock: vi.fn(),
+  googleProviderMock: class GoogleAuthProviderMock {},
   signInMock: vi.fn(),
+  signInWithPopupMock: vi.fn(),
   signOutMock: vi.fn(),
 }));
 
@@ -12,12 +21,14 @@ vi.mock('../lib/firebase', () => ({
 }));
 
 vi.mock('firebase/auth', () => ({
+  GoogleAuthProvider: googleProviderMock,
   createUserWithEmailAndPassword: createUserMock,
   signInWithEmailAndPassword: signInMock,
+  signInWithPopup: signInWithPopupMock,
   signOut: signOutMock,
 }));
 
-import { logout } from './authService';
+import { loginWithGoogle, logout } from './authService';
 
 function createFirebaseUser() {
   return {
@@ -100,5 +111,19 @@ describe('logout', () => {
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(signOutMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('loginWithGoogle', () => {
+  it('autentica usando o provedor Google e retorna o usuário', async () => {
+    const user = { uid: 'google-user' };
+    signInWithPopupMock.mockResolvedValue({ user });
+
+    await expect(loginWithGoogle()).resolves.toBe(user);
+
+    expect(signInWithPopupMock).toHaveBeenCalledWith(
+      authMock,
+      expect.any(googleProviderMock),
+    );
   });
 });
