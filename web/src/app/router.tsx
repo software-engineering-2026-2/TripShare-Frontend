@@ -1,7 +1,9 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
+import EditProfilePage from '../pages/EditProfilePage';
 import LoginPage from '../pages/LoginPage';
 import MyTripsPage from '../pages/MyTripsPage';
 import PlaceDetailsPage from '../pages/PlaceDetailsPage';
+import PublicProfilePage from '../pages/PublicProfilePage';
 import RegisterPage from '../pages/RegisterPage';
 import TouristSpotsPage from '../pages/TouristSpotsPage';
 
@@ -29,5 +31,13 @@ export const router = createBrowserRouter([
   {
     path: '/locais/:placeId',
     element: <PlaceDetailsPage />,
+  },
+  {
+    path: '/perfil/:id/editar',
+    element: <EditProfilePage />,
+  },
+  {
+    path: '/perfil/:id',
+    element: <PublicProfilePage />,
   },
 ]);

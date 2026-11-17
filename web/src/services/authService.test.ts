@@ -32,6 +32,7 @@ vi.mock('firebase/auth', () => ({
 }));
 
 import {
+  getCurrentUserProfile,
   getIdToken,
   loginWithGoogle,
   logout,
@@ -45,6 +46,8 @@ const profile = {
 
 const backendUser = {
   id: 'b3f1c0de-4a2e-4c1b-9d57-0e8f6a1c2d34',
+  authId: '7c2e9a10-1b3d-4f5e-8a6b-9c0d1e2f3a4b',
+  uuid: 'firebase-uid',
   username: 'joaosilva',
   name: 'João Silva',
   email: 'joao@email.com',
@@ -54,6 +57,7 @@ const backendUser = {
   role: 'USER',
   status: 'ACTIVE',
   createdAt: '2026-10-21T14:30:00Z',
+  updatedAt: '2026-10-21T14:30:00Z',
 };
 
 function createFirebaseUser() {
@@ -242,6 +246,33 @@ describe('register', () => {
       'senha123!',
     );
     expect(result).toEqual(backendUser);
+  });
+});
+
+describe('getCurrentUserProfile', () => {
+  it('busca o perfil por POST /auth/login com o token e o UID do Firebase', async () => {
+    mockFetchResponse(fetchMock, { ok: true, status: 200, json: backendUser });
+    setCurrentUser({ ...createFirebaseUser(), uid: 'firebase-uid' });
+
+    await expect(getCurrentUserProfile()).resolves.toEqual(backendUser);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/auth/login'),
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          Authorization: 'Bearer firebase-id-token',
+        }),
+        body: JSON.stringify({ uuid: 'firebase-uid' }),
+      }),
+    );
+  });
+
+  it('falha sem chamar o back-end quando não há usuário autenticado', async () => {
+    setCurrentUser(null);
+
+    await expect(getCurrentUserProfile()).rejects.toThrow('Usuário não autenticado.');
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 

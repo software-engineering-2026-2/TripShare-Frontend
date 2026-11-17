@@ -78,7 +78,21 @@ describe('LoginPage', () => {
   });
 
   it('redireciona usuário cadastrado para minhas viagens após entrar com o Google', async () => {
-    getCurrentUserProfileMock.mockResolvedValue({ id: 'user-1' });
+    getCurrentUserProfileMock.mockResolvedValue({
+      id: 'user-1',
+      authId: 'auth-1',
+      uuid: 'firebase-uid',
+      username: 'ana',
+      name: 'Ana Silva',
+      email: 'ana@example.com',
+      phone: null,
+      bio: null,
+      hometown: null,
+      role: 'USER',
+      status: 'ACTIVE',
+      createdAt: '2026-10-21T14:30:00Z',
+      updatedAt: '2026-10-21T14:30:00Z',
+    });
     const user = userEvent.setup();
 
     renderLoginPage();

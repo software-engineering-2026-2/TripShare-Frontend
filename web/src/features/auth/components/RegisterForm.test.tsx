@@ -23,6 +23,8 @@ const toastSuccessMock = vi.mocked(toast.success);
 
 const userProfile: UserProfile = {
   id: 'b3f1c0de-4a2e-4c1b-9d57-0e8f6a1c2d34',
+  authId: '7c2e9a10-1b3d-4f5e-8a6b-9c0d1e2f3a4b',
+  uuid: 'firebase-uid',
   username: 'ana',
   name: 'Ana Silva',
   email: 'ana@example.com',
@@ -32,6 +34,7 @@ const userProfile: UserProfile = {
   role: 'USER',
   status: 'ACTIVE',
   createdAt: '2026-10-21T14:30:00Z',
+  updatedAt: '2026-10-21T14:30:00Z',
 };
 
 function renderRegisterForm() {

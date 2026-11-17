@@ -1,6 +1,9 @@
 :root {
   --color-primary: #0077b6;
-  --color-primary-hover: #023e8a;
+  --brand-from: #0096c7;
+  --brand-to: #023e8a;
+  --color-primary-hover: var(--brand-to);
+  --color-surface-accent: #e0f0f6;
   --color-text: #0a2540;
   --color-text-muted: #4a6b82;
   --color-text-placeholder: #4a6b82;
@@ -108,6 +111,13 @@ p {
   margin: 0;
 }
 
+:where(.register-page, .profile-edit-page),
+:where(.register-page, .profile-edit-page) *,
+:where(.register-page, .profile-edit-page) *::before,
+:where(.register-page, .profile-edit-page) *::after {
+  box-sizing: border-box;
+}
+
 .form-control,
 .form-button {
   box-sizing: border-box;
@@ -124,6 +134,31 @@ p {
     background-color 160ms ease,
     border-color 160ms ease,
     box-shadow 160ms ease;
+}
+
+:where(.register-page, .profile-edit-page) .form-control:hover {
+  border-color: var(--color-border-hover);
+}
+
+:where(.register-page, .profile-edit-page) .form-control:focus {
+  background: var(--color-surface);
+  border-color: var(--color-text);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+:where(.register-page, .profile-edit-page) .form-control[aria-invalid='true'] {
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-border);
+}
+
+:where(.register-page, .profile-edit-page) .form-control[aria-invalid='true']:hover {
+  border-color: var(--color-danger);
+}
+
+:where(.register-page, .profile-edit-page) .form-control[aria-invalid='true']:focus {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px var(--color-danger-ring);
 }
 
 .form-button {
