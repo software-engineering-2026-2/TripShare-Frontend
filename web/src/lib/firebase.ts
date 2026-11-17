@@ -11,7 +11,12 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUMENT_ID
 };
 
-const hasFirebaseConfig = Object.values(firebaseConfig).every(Boolean);
+const hasFirebaseConfig = Boolean(
+  firebaseConfig.apiKey &&
+    firebaseConfig.authDomain &&
+    firebaseConfig.projectId &&
+    firebaseConfig.appId,
+);
 
 export const auth: Auth | null = hasFirebaseConfig
   ? getAuth(initializeApp(firebaseConfig))

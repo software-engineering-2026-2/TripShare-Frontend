@@ -3,7 +3,6 @@
 import type {
   CreateTripInput,
   Destination,
-  DestinationPage,
   Trip,
   TripActivities,
   TripActivity,
@@ -132,17 +131,10 @@ export async function mockUpdateTrip(
 
 export async function mockSearchDestinations(
   query: string,
-  page = 0,
-): Promise<DestinationPage> {
+): Promise<Destination[]> {
   await wait(300);
   const search = query.trim().toLowerCase();
-  const results = destinations.filter((destination) =>
+  return destinations.filter((destination) =>
     destination.city.toLowerCase().includes(search),
   );
-  const size = 5;
-  return {
-    content: results.slice(page * size, (page + 1) * size),
-    totalPages: Math.ceil(results.length / size),
-    number: page,
-  };
 }
