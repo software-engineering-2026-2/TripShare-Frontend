@@ -1,12 +1,23 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import PlaceDetails from '../features/places/components/PlaceDetails';
-import { usePlace } from '../features/places/usePlace';
+import PlaceUnavailable, {
+  type SavedActivity,
+} from '../features/places/components/PlaceUnavailable';
+import { isPlaceRemovedError, usePlace } from '../features/places/usePlace';
 import '../css/place-details.css';
+
+interface PlaceDetailsLocationState {
+  savedActivity?: SavedActivity;
+}
 
 export default function PlaceDetailsPage() {
   const { placeId = '' } = useParams();
   const navigate = useNavigate();
-  const { data: place, isPending, isError, refetch } = usePlace(placeId);
+  const location = useLocation();
+  const { savedActivity } =
+    (location.state as PlaceDetailsLocationState | null) ?? {};
+  const { data: place, isPending, isError, error, refetch } = usePlace(placeId);
+  const isRemoved = isPlaceRemovedError(error);
 
   return (
     <main className="place-details-page">
@@ -23,7 +34,9 @@ export default function PlaceDetailsPage() {
           <p className="place-details__status">Carregando local...</p>
         )}
 
-        {isError && (
+        {isRemoved && <PlaceUnavailable savedActivity={savedActivity} />}
+
+        {isError && !isRemoved && (
           <div className="place-details__status" role="alert">
             <p>Não foi possível carregar os detalhes deste local.</p>
             <button
