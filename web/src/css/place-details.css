@@ -171,3 +171,28 @@
 .place-details__footer p {
   margin: 0;
 }
+
+.place-details__not-informed {
+  font-style: italic;
+}
+
+.place-details__map-unavailable {
+  margin: 8px 0 0;
+  padding: 16px;
+  color: var(--color-text-muted);
+  background: var(--color-surface-muted);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.place-details__unverified {
+  margin: 0;
+  padding: 12px 16px;
+  color: var(--color-text);
+  background: var(--color-surface-muted);
+  border-left: 4px solid var(--color-primary);
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+}
