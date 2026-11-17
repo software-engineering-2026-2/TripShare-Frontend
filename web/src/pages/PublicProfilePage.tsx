@@ -28,8 +28,9 @@ export default function PublicProfilePage() {
       try {
         const user = await getUserById(id);
         if (isMounted) {
+          // A resposta pública não traz o id; usamos o id da rota.
           setProfile({
-            id: user.id,
+            id,
             username: user.username,
             name: user.name,
             bio: user.bio,
@@ -39,7 +40,7 @@ export default function PublicProfilePage() {
           try {
             const currentUser = await getCurrentUserProfile();
             if (isMounted) {
-              setIsOwnProfile(currentUser.id === user.id);
+              setIsOwnProfile(currentUser.id === id);
             }
           } catch {
             // Perfil público continua disponível para visitantes.

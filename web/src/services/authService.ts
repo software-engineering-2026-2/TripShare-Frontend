@@ -27,8 +27,13 @@ export interface RegisterProfileInput {
   hometown?: string;
 }
 
+// Perfil completo do usuário autenticado, retornado por /auth/register,
+// /auth/login e PATCH /users/me.
 export interface UserProfile {
   id: string;
+  authId: string;
+  // UID do Firebase
+  uuid: string;
   username: string;
   name: string;
   email: string;
@@ -38,6 +43,7 @@ export interface UserProfile {
   role: string;
   status: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 export async function login(email: string, password: string) {
@@ -131,13 +137,24 @@ export async function getIdToken() {
   return user.getIdToken();
 }
 
+// O back-end não tem /auth/me: o perfil do usuário autenticado vem de
+// POST /auth/login, com o UID do Firebase no corpo. Responde 404 quando
+// ainda não existe perfil para esse UID.
 export async function getCurrentUserProfile(): Promise<UserProfile> {
-  const token = await getIdToken();
+  const user = requireAuth().currentUser;
 
-  return request<UserProfile>('/auth/me', {
+  if (!user) {
+    throw new Error('Usuário não autenticado.');
+  }
+
+  const token = await user.getIdToken();
+
+  return request<UserProfile>('/auth/login', {
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
     },
+    body: JSON.stringify({ uuid: user.uid }),
   });
 }
 

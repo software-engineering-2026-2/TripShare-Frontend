@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '../services/api';
 import { getCurrentUserProfile } from '../services/authService';
@@ -17,18 +17,31 @@ vi.mock('../services/authService', () => ({
 const getUserByIdMock = vi.mocked(getUserById);
 const getCurrentUserProfileMock = vi.mocked(getCurrentUserProfile);
 
+// GET /users/{id} retorna só os dados públicos, sem id.
 const user = {
-  id: 'user-1',
   username: 'ana',
   name: 'Ana Souza',
-  email: 'ana@example.com',
-  phone: null,
   bio: 'Viajante',
   hometown: 'Recife',
-  role: 'USER',
-  status: 'ACTIVE',
-  createdAt: '2026-01-01T00:00:00Z',
 };
+
+function currentUser(id: string) {
+  return {
+    id,
+    authId: 'auth-1',
+    uuid: 'firebase-uid',
+    username: 'ana',
+    name: 'Ana Souza',
+    email: 'ana@example.com',
+    phone: null,
+    bio: 'Viajante',
+    hometown: 'Recife',
+    role: 'USER',
+    status: 'ACTIVE',
+    createdAt: '2026-01-01T00:00:00Z',
+    updatedAt: '2026-01-01T00:00:00Z',
+  };
+}
 
 function renderPage() {
   return render(
@@ -40,6 +53,9 @@ function renderPage() {
     </MemoryRouter>,
   );
 }
+
+// Sem globals no Vitest, a Testing Library não limpa a tela sozinha entre os testes.
+afterEach(cleanup);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -60,7 +76,7 @@ describe('PublicProfilePage', () => {
 
   it('exibe o link de edição somente para o próprio perfil', async () => {
     getUserByIdMock.mockResolvedValue(user);
-    getCurrentUserProfileMock.mockResolvedValue(user);
+    getCurrentUserProfileMock.mockResolvedValue(currentUser('user-1'));
 
     renderPage();
 
@@ -68,6 +84,16 @@ describe('PublicProfilePage', () => {
       'href',
       '/perfil/user-1/editar',
     );
+  });
+
+  it('não exibe o link de edição no perfil de outra pessoa', async () => {
+    getUserByIdMock.mockResolvedValue(user);
+    getCurrentUserProfileMock.mockResolvedValue(currentUser('user-2'));
+
+    renderPage();
+
+    expect(await screen.findByRole('heading', { name: 'Ana Souza' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Editar perfil/ })).not.toBeInTheDocument();
   });
 
   it('exibe estado de perfil não encontrado quando a API responde 404', async () => {

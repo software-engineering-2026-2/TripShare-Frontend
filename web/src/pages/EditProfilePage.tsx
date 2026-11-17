@@ -5,7 +5,8 @@ import type {
   EditableProfile,
   UpdateProfileInput,
 } from '../features/profile/profileTypes';
-import { getUserById, updateCurrentUser } from '../services/userService';
+import { getCurrentUserProfile } from '../services/authService';
+import { updateCurrentUser } from '../services/userService';
 import '../css/profile-edit.css';
 
 export default function EditProfilePage() {
@@ -14,6 +15,7 @@ export default function EditProfilePage() {
   const [profile, setProfile] = useState<EditableProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [isOtherUser, setIsOtherUser] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -21,18 +23,27 @@ export default function EditProfilePage() {
     async function loadProfile() {
       setIsLoading(true);
       setHasError(false);
+      setIsOtherUser(false);
 
       try {
-        const user = await getUserById(id);
-        if (isMounted) {
-          setProfile({
-            id: user.id,
-            name: user.name,
-            phone: user.phone,
-            bio: user.bio,
-            hometown: user.hometown,
-          });
+        // PATCH /users/me altera o perfil de quem está logado, então o
+        // formulário carrega esse mesmo perfil, e não o da URL.
+        const user = await getCurrentUserProfile();
+        if (!isMounted) return;
+
+        if (user.id !== id) {
+          setProfile(null);
+          setIsOtherUser(true);
+          return;
         }
+
+        setProfile({
+          id: user.id,
+          name: user.name,
+          phone: user.phone,
+          bio: user.bio,
+          hometown: user.hometown,
+        });
       } catch {
         if (isMounted) {
           setProfile(null);
@@ -80,6 +91,9 @@ export default function EditProfilePage() {
           {isLoading && <p>Carregando perfil...</p>}
           {!isLoading && hasError && (
             <p role="alert">Não foi possível carregar este perfil.</p>
+          )}
+          {!isLoading && isOtherUser && (
+            <p role="alert">Você só pode editar o seu próprio perfil.</p>
           )}
           {!isLoading && profile && (
             <EditProfileForm

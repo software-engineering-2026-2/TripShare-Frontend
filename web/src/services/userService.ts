@@ -1,27 +1,30 @@
-import { getIdToken } from './authService';
+import { getIdToken, type UserProfile } from './authService';
 import { request } from './api';
 
-export interface UserProfile {
-  id: string;
+// Resposta de GET /users/{id}: só os dados públicos do perfil, sem id,
+// e-mail ou telefone.
+export interface PublicUserProfile {
   username: string;
   name: string;
-  email: string;
-  phone: string | null;
   bio: string | null;
   hometown: string | null;
-  role: string;
-  status: string;
-  createdAt: string;
 }
 
 export type UpdateUserInput = Partial<
   Pick<UserProfile, 'name' | 'phone' | 'bio' | 'hometown'>
 >;
 
-export async function getUserById(id: string): Promise<UserProfile> {
-  return request<UserProfile>(`/users/${encodeURIComponent(id)}`);
+export async function getUserById(id: string): Promise<PublicUserProfile> {
+  const token = await getIdToken();
+
+  return request<PublicUserProfile>(`/users/${encodeURIComponent(id)}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 }
 
+// Sempre altera o perfil do usuário autenticado, identificado pelo token.
 export async function updateCurrentUser(
   input: UpdateUserInput,
 ): Promise<UserProfile> {
