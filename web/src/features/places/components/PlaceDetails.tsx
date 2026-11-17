@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Coordinates, Place } from '../../../services/placesService';
 import { CATEGORY_LABELS } from '../placeFormat';
 import {
@@ -9,6 +10,8 @@ import {
 interface PlaceDetailsProps {
   place: Place;
 }
+
+const NOT_INFORMED = 'Não informado';
 
 // Área pequena em volta do ponto para o mapa incorporado do OpenStreetMap.
 const MAP_MARGIN = 0.004;
@@ -24,14 +27,57 @@ function getMapEmbedUrl({ latitude, longitude }: Coordinates): string {
   return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${latitude},${longitude}`;
 }
 
+interface InfoRowProps {
+  label: string;
+  value?: string | null;
+}
+
+function InfoRow({ label, value }: InfoRowProps) {
+  return (
+    <div className="place-details__info-row">
+      <dt>{label}</dt>
+      <dd className={value ? undefined : 'place-details__not-informed'}>
+        {value || NOT_INFORMED}
+      </dd>
+    </div>
+  );
+}
+
+interface PlaceMapProps {
+  name: string;
+  coordinates?: Coordinates | null;
+}
+
+// O mapa é opcional: sem coordenadas ou com falha no carregamento,
+// os detalhes em texto continuam na tela.
+function PlaceMap({ name, coordinates }: PlaceMapProps) {
+  // O iframe nem sempre dispara onError em falhas de rede, então também
+  // tratamos o navegador sem conexão como falha do mapa.
+  const [hasFailed, setHasFailed] = useState(() => !navigator.onLine);
+
+  if (!coordinates || hasFailed) {
+    return (
+      <p className="place-details__map-unavailable" role="status">
+        {coordinates
+          ? 'Não foi possível carregar o mapa.'
+          : 'Mapa indisponível: o local não tem coordenadas informadas.'}
+      </p>
+    );
+  }
+
+  return (
+    <iframe
+      className="place-details__map"
+      title={`Mapa com a localização de ${name}`}
+      src={getMapEmbedUrl(coordinates)}
+      loading="lazy"
+      onError={() => setHasFailed(true)}
+    />
+  );
+}
+
 export default function PlaceDetails({ place }: PlaceDetailsProps) {
   const hasOpeningHours = place.openingHours.length > 0;
-  const hasInfo = Boolean(
-    place.address ||
-    place.coordinates ||
-    place.estimatedDurationMinutes ||
-    place.cost,
-  );
 
   return (
     <article className="place-details" aria-labelledby="place-name">
@@ -48,65 +94,52 @@ export default function PlaceDetails({ place }: PlaceDetailsProps) {
         </h1>
       </header>
 
-      {place.description && (
-        <section className="place-details__section">
-          <h2 className="place-details__section-title">Descrição</h2>
-          <p className="place-details__text">{place.description}</p>
-        </section>
-      )}
+      <section className="place-details__section">
+        <h2 className="place-details__section-title">Descrição</h2>
+        <p
+          className={
+            place.description
+              ? 'place-details__text'
+              : 'place-details__text place-details__not-informed'
+          }
+        >
+          {place.description || NOT_INFORMED}
+        </p>
+      </section>
 
       <section className="place-details__section">
         <h2 className="place-details__section-title">Localização</h2>
-        {place.neighborhood && (
-          <p className="place-details__text">{place.neighborhood}</p>
-        )}
-        {place.coordinates && (
-          <iframe
-            className="place-details__map"
-            title={`Mapa com a localização de ${place.name}`}
-            src={getMapEmbedUrl(place.coordinates)}
-            loading="lazy"
-          />
-        )}
+        <dl className="place-details__info-list">
+          <InfoRow label="Bairro" value={place.neighborhood} />
+        </dl>
+        <PlaceMap name={place.name} coordinates={place.coordinates} />
       </section>
 
-      {hasInfo && (
-        <section className="place-details__section">
-          <h2 className="place-details__section-title">Informações</h2>
-          <dl className="place-details__info-list">
-            {place.address && (
-              <div className="place-details__info-row">
-                <dt>Endereço</dt>
-                <dd>{place.address}</dd>
-              </div>
-            )}
-            {place.coordinates && (
-              <div className="place-details__info-row">
-                <dt>Coordenadas</dt>
-                <dd>{formatCoordinates(place.coordinates)}</dd>
-              </div>
-            )}
-            {!!place.estimatedDurationMinutes && (
-              <div className="place-details__info-row">
-                <dt>Duração estimada da visita</dt>
-                <dd>{formatDuration(place.estimatedDurationMinutes)}</dd>
-              </div>
-            )}
-            {place.cost && (
-              <div className="place-details__info-row">
-                <dt>Custos</dt>
-                <dd>{place.cost}</dd>
-              </div>
-            )}
-          </dl>
-        </section>
-      )}
+      <section className="place-details__section">
+        <h2 className="place-details__section-title">Informações</h2>
+        <dl className="place-details__info-list">
+          <InfoRow label="Endereço" value={place.address} />
+          <InfoRow
+            label="Coordenadas"
+            value={place.coordinates && formatCoordinates(place.coordinates)}
+          />
+          <InfoRow
+            label="Duração estimada da visita"
+            value={
+              place.estimatedDurationMinutes
+                ? formatDuration(place.estimatedDurationMinutes)
+                : null
+            }
+          />
+          <InfoRow label="Custos" value={place.cost} />
+        </dl>
+      </section>
 
-      {hasOpeningHours && (
-        <section className="place-details__section">
-          <h2 className="place-details__section-title">
-            Horário de funcionamento
-          </h2>
+      <section className="place-details__section">
+        <h2 className="place-details__section-title">
+          Horário de funcionamento
+        </h2>
+        {hasOpeningHours ? (
           <dl className="place-details__info-list">
             {formatWeekHours(place.openingHours).map(({ weekday, hours }) => (
               <div className="place-details__info-row" key={weekday}>
@@ -115,20 +148,20 @@ export default function PlaceDetails({ place }: PlaceDetailsProps) {
               </div>
             ))}
           </dl>
-        </section>
-      )}
+        ) : (
+          <p className="place-details__text place-details__not-informed">
+            {NOT_INFORMED}
+          </p>
+        )}
+      </section>
 
-      {(hasOpeningHours || place.cost || place.source) && (
-        <footer className="place-details__footer">
-          {place.source && <p>Fonte das informações: {place.source}</p>}
-          {(hasOpeningHours || place.cost) && (
-            <p>
-              Horários e preços podem mudar. Confirme diretamente com o
-              estabelecimento.
-            </p>
-          )}
-        </footer>
-      )}
+      <footer className="place-details__footer">
+        <p>Fonte das informações: {place.source || NOT_INFORMED}</p>
+        <p>
+          Horários e preços podem mudar. Confirme diretamente com o
+          estabelecimento.
+        </p>
+      </footer>
     </article>
   );
 }

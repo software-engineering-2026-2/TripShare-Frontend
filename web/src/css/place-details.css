@@ -171,3 +171,17 @@
 .place-details__footer p {
   margin: 0;
 }
+
+.place-details__not-informed {
+  font-style: italic;
+}
+
+.place-details__map-unavailable {
+  margin: 8px 0 0;
+  padding: 16px;
+  color: var(--color-text-muted);
+  background: var(--color-surface-muted);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: 12px;
+  font-size: 14px;
+}
