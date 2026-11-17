@@ -14,7 +14,7 @@ Before implementing:
 - If a simpler approach exists, say so. Push back when warranted.
 - If something is unclear, stop. Name what's confusing. Ask.
 
-## 2. Simplicity First 
+## 2. Simplicity First
 
 **Minimum code that solves the problem. Nothing speculative.**
 
@@ -71,28 +71,32 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 A identidade visual oficial do projeto utiliza o tema **Copacabana Ocean**, inspirado na orla e no mar do Rio de Janeiro, combinando tons de azul oceânico com superfícies claras e frescas.
 
-### Tokens Principais (CSS Variables em `app/globals.css`)
+### Tokens Principais (CSS Variables em `web/src/index.css`)
+
+Os estilos são escritos em CSS puro: variáveis globais em `web/src/index.css` e um arquivo por tela em `web/src/css/`. O projeto não usa Tailwind nem biblioteca de componentes. Use a variável da tabela em vez do hex solto. Quando a variável ainda não existir, crie-a em `web/src/index.css` com o prefixo `--color-` e o hex da tabela.
 
 | Token | Variável CSS | Hex | Uso Principal |
 | :--- | :--- | :--- | :--- |
-| **Primary** | `--primary` | `#0077B6` | Botões principais, ícones de destaque, links ativos e badges |
-| **Primary Foreground** | `--primary-foreground` | `#FFFFFF` | Texto e ícones sobre elementos `--primary` |
-| **Brand Gradient (From)** | `--brand-from` | `#0096C7` | Início do gradiente de ações de destaque (ex.: *Distribuir Viagem*, *Gerar Roteiro*) |
-| **Brand Gradient (To)** | `--brand-to` | `#023E8A` | Fim do gradiente de ações de destaque |
-| **Background** | `--background` | `#F8FDFF` | Fundo geral das páginas (branco gelo suave) |
-| **Foreground** | `--foreground` | `#0A2540` | Texto principal e títulos (azul-marinho profundo) |
-| **Card / Popover** | `--card` / `--popover` | `#FFFFFF` | Superfície de cartões, modais e popovers |
-| **Secondary / Muted** | `--secondary` / `--muted` | `#EBF5F8` | Fundos secundários, áreas agrupadas e containers sutis |
-| **Muted Foreground** | `--muted-foreground` | `#4A6B82` | Textos de apoio, legendas, horários e metadados |
-| **Accent** | `--accent` | `#E0F0F6` | Estado de hover em botões secundários, menus e itens selecionáveis |
-| **Border** | `--border` | `#D8E8F0` | Divisórias, bordas de cartões e contornos |
-| **Input** | `--input` | `#C5DCE8` | Bordas de campos de formulário e seletores |
-| **Ring** | `--ring` | `#0077B6` | Anel de foco de acessibilidade (`focus-visible`) |
-| **Destructive** | `--destructive` | `#C13515` | Alertas de conflito de horário e ações de exclusão |
+| **Primary** | `--color-primary` | `#0077B6` | Botões principais, ícones de destaque, links ativos e badges |
+| **Primary Foreground** | `--color-on-primary` | `#FFFFFF` | Texto e ícones sobre elementos `--color-primary` |
+| **Brand Gradient (From)** | ainda não existe | `#0096C7` | Início do gradiente de ações de destaque (ex.: *Distribuir Viagem*, *Gerar Roteiro*) |
+| **Brand Gradient (To)** | `--color-primary-hover` (mesmo hex) | `#023E8A` | Fim do gradiente de ações de destaque |
+| **Background** | ainda não existe | `#F8FDFF` | Fundo geral das páginas (branco gelo suave) |
+| **Foreground** | `--color-text` | `#0A2540` | Texto principal e títulos (azul-marinho profundo) |
+| **Card / Popover** | `--color-surface` | `#FFFFFF` | Superfície de cartões, modais e popovers |
+| **Secondary / Muted** | `--color-surface-muted` | `#EBF5F8` | Fundos secundários, áreas agrupadas e containers sutis |
+| **Muted Foreground** | `--color-text-muted` | `#4A6B82` | Textos de apoio, legendas, horários e metadados |
+| **Accent** | ainda não existe | `#E0F0F6` | Estado de hover em botões secundários, menus e itens selecionáveis |
+| **Border** | `--color-border` | `#D8E8F0` | Divisórias, bordas de cartões e contornos |
+| **Input** | `--color-border-strong` | `#C5DCE8` | Bordas de campos de formulário e seletores |
+| **Ring** | `--color-focus-ring`, `--color-focus-ring-soft`, `--color-focus-ring-strong` | `#0077B6` (com transparência) | Anel de foco de acessibilidade (`focus-visible`) |
+| **Destructive** | `--color-danger` (fundo: `--color-danger-bg`) | `#C13515` | Alertas de conflito de horário e ações de exclusão |
+
+Não use `--accent`, `--accent-bg` nem `--accent-border` de `web/src/index.css`: são sobras do template do Vite (`#AA3BFF`) e não fazem parte da paleta.
 
 ### Cores Semânticas dos Turnos do Roteiro
 
-Os turnos do cronograma diário e os pins do mapa mantêm cores semânticas fixas para rápida identificação visual:
+Os turnos do cronograma diário e os pins do mapa mantêm cores semânticas fixas para rápida identificação visual. Essas variáveis ainda não existem no código; ao criá-las, use os nomes abaixo em `web/src/index.css`:
 
 | Turno | Horário | Variável CSS | Hex | Texto (`onColor`) |
 | :--- | :--- | :--- | :--- | :--- |
@@ -104,33 +108,63 @@ Os turnos do cronograma diário e os pins do mapa mantêm cores semânticas fixa
 
 
 ## Project Instructions
-## Idioma
 
-- Responda preferencialmente em portugues do Brasil.
-- Mantenha explicacoes objetivas, com passos claros quando houver uma tarefa pratica.
+### Language
 
-## Fluxo de trabalho
+- Respond and write project documentation in Brazilian Portuguese.
+- Keep explanations concise, with clear steps for practical tasks.
+- Preserve the names of commands, APIs, files, and technical identifiers.
+- Follow existing conventions for naming and code comments.
+- Keep third-party skills in their original language.
 
-- considere a branch atual US<N> em que N é o número da US referente ao arquivo da Etapa.
-- Preserve mudancas existentes feitas pelo usuario.
-- Antes de editar, verifique se o arquivo ja existe e se ha convencoes locais relevantes.
-- Prefira mudancas pequenas, diretas e alinhadas ao padrao do projeto.
+### Workflow
 
-## Edicao de arquivos
+- Work on the current `US<N>` branch, where `N` is the user story number associated with the stage file.
+- Preserve existing changes made by the user.
+- Before editing, check whether the file already exists and whether relevant local conventions apply.
+- Prefer small, straightforward changes consistent with the project's conventions.
+- At the start of every task, check the repository's `docs/` directory.
+- Read `docs/README.md`, when available, to identify relevant documentation.
+- Before planning or editing files, read the documents relevant to the task,
+  including applicable requirements, business rules, and architectural decisions.
+- Follow links to additional documents when needed to understand the task.
+- Treat proposals and open questions as unconfirmed; do not assume they are
+  approved requirements.
+- If documentation conflicts with the implementation or the user's request,
+  report the discrepancy and clarify it when necessary.
+- Update affected documentation when an approved change alters the documented
+  behavior.
 
-- Use nomes de arquivos e diretorios claros em Inglês.
-- Evite refatoracoes fora do escopo solicitado.
-- Nao remova codigo, arquivos ou configuracoes sem necessidade clara.
-- Inclua comentarios apenas quando ajudarem a entender uma decisao nao obvia.
+### File Editing
 
-## Verificacao
+- Use clear English names for new files and directories.
+- Avoid refactoring outside the requested scope.
+- Do not remove code, files, or configuration without a clear need.
+- Add comments only when they help explain a non-obvious decision.
 
-- Quando houver codigo, execute testes, lint ou comandos de validacao disponiveis.
-- Se nao for possivel validar automaticamente, explique o que foi verificado manualmente.
-- Informe qualquer limitacao encontrada durante a execucao.
+### Verification
 
-## Entrega
+- When changing code, run the available tests, lint checks, or validation commands relevant to the changes.
+- If automated validation is not possible, explain what was checked manually.
+- Report any limitations encountered during execution.
 
-- Resuma as alteracoes feitas.
-- Cite arquivos alterados usando caminhos claros.
-- Sugira proximos passos apenas quando forem realmente uteis.
+### Delivery
+
+- Summarize the changes made.
+- Reference modified files using clear paths.
+- Suggest next steps only when they are useful
+
+## Skills
+
+- At the start of every task, inspect the skills available in
+  `.agents/skills/`, relative to the repository root.
+- Review each skill's `name` and `description` to identify which skills
+  apply to the task and the project's stack.
+- Before performing work covered by a skill, read its full `SKILL.md`
+  and follow the applicable instructions.
+- Load referenced documents, scripts, and templates only when needed.
+- Briefly state which skills you are using and why.
+- If no skill applies, proceed using the repository's instructions.
+- Reassess applicable skills if the task's scope changes.
+- If a required skill is missing or unreadable, report the limitation
+  and do not claim to have followed it.

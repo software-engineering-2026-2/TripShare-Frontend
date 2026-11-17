@@ -1,5 +1,6 @@
 
 import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 
 interface LoginFormProps {
   onSubmit: (email: string, password: string) => Promise<void>;
@@ -49,7 +50,7 @@ export default function LoginForm({ onSubmit }: LoginFormProps) {
       <div className="login-field">
         <div className="login-password-label">
           <label htmlFor="password">Senha</label>
-          <a href="/recuperar-senha">Esqueceu?</a>
+          <Link to="/recuperar-senha">Esqueceu?</Link>
         </div>
 
         <input
@@ -70,7 +71,7 @@ export default function LoginForm({ onSubmit }: LoginFormProps) {
       </button>
 
       <p className="login-register">
-        Não tem uma conta? <a href="/cadastro">Criar conta gratuita</a>
+        Não tem uma conta? <Link to="/cadastro">Criar conta gratuita</Link>
       </p>
     </form>
   );
