@@ -1,6 +1,7 @@
 import { FirebaseError } from 'firebase/app';
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 import { ApiError } from '../../../services/api';
 import { register, type RegisterProfileInput } from '../../../services/authService';
@@ -224,6 +225,7 @@ export default function RegisterForm() {
 
     try {
       await register(values.email.trim(), values.password, buildProfileInput(values));
+      toast.success('Cadastro realizado com sucesso!', { duration: 5000 });
       navigate('/login');
     } catch (error) {
       // TODO: quando POST /auth/register retornar e-mail já cadastrado,
