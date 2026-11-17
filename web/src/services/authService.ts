@@ -11,14 +11,6 @@ import {
 import { auth } from '../lib/firebase';
 import { ApiError, request } from './api';
 
-function requireAuth() {
-  if (!auth) {
-    throw new Error('Firebase não está configurado neste ambiente.');
-  }
-
-  return auth;
-}
-
 export interface RegisterProfileInput {
   username: string;
   name: string;
@@ -44,6 +36,14 @@ export interface UserProfile {
   status: string;
   createdAt: string;
   updatedAt: string;
+}
+
+function requireAuth() {
+  if (!auth) {
+    throw new Error('Firebase não está configurado neste ambiente.');
+  }
+
+  return auth;
 }
 
 export async function login(email: string, password: string) {
@@ -128,7 +128,10 @@ export async function register(
 }
 
 export async function getIdToken() {
-  const user = requireAuth().currentUser;
+  // Ao recarregar a página, o Firebase ainda está restaurando a sessão.
+  const configuredAuth = requireAuth();
+  await configuredAuth.authStateReady();
+  const user = configuredAuth.currentUser;
 
   if (!user) {
     throw new Error('Usuário não autenticado.');

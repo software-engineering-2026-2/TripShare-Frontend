@@ -3,10 +3,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from './api';
 
-const { authMock, createUserMock, signInMock, signOutMock } = vi.hoisted(() => ({
-  authMock: { currentUser: null },
+const {
+  authMock,
+  createUserMock,
+  googleProviderMock,
+  signInMock,
+  signInWithPopupMock,
+  signOutMock,
+} = vi.hoisted(() => ({
+  authMock: { currentUser: null, authStateReady: vi.fn() },
   createUserMock: vi.fn(),
+  googleProviderMock: class GoogleAuthProviderMock {},
   signInMock: vi.fn(),
+  signInWithPopupMock: vi.fn(),
   signOutMock: vi.fn(),
 }));
 
@@ -15,12 +24,20 @@ vi.mock('../lib/firebase', () => ({
 }));
 
 vi.mock('firebase/auth', () => ({
+  GoogleAuthProvider: googleProviderMock,
   createUserWithEmailAndPassword: createUserMock,
   signInWithEmailAndPassword: signInMock,
+  signInWithPopup: signInWithPopupMock,
   signOut: signOutMock,
 }));
 
-import { getCurrentUserProfile, logout, register } from './authService';
+import {
+  getCurrentUserProfile,
+  getIdToken,
+  loginWithGoogle,
+  logout,
+  register,
+} from './authService';
 
 const profile = {
   username: 'joaosilva',
@@ -311,5 +328,38 @@ describe('logout', () => {
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(signOutMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('loginWithGoogle', () => {
+  it('autentica usando o provedor Google e retorna o usuário', async () => {
+    const user = { uid: 'google-user' };
+    signInWithPopupMock.mockResolvedValue({ user });
+
+    await expect(loginWithGoogle()).resolves.toBe(user);
+
+    expect(signInWithPopupMock).toHaveBeenCalledWith(
+      authMock,
+      expect.any(googleProviderMock),
+    );
+  });
+});
+
+describe('getIdToken', () => {
+  it('espera o Firebase restaurar a sessão antes de ler o usuário', async () => {
+    const firebaseUser = createFirebaseUser();
+    setCurrentUser(null);
+    authMock.authStateReady.mockImplementationOnce(async () => {
+      setCurrentUser(firebaseUser);
+    });
+
+    await expect(getIdToken()).resolves.toBe('firebase-id-token');
+  });
+
+  it('falha quando não há sessão após a restauração', async () => {
+    setCurrentUser(null);
+    authMock.authStateReady.mockResolvedValueOnce(undefined);
+
+    await expect(getIdToken()).rejects.toThrow('Usuário não autenticado.');
   });
 });
