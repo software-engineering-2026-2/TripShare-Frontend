@@ -101,6 +101,8 @@ export async function register(
 }
 
 export async function getIdToken() {
+  // Ao recarregar a página, o Firebase ainda está restaurando a sessão.
+  await auth.authStateReady();
   const user = auth.currentUser;
 
   if (!user) {

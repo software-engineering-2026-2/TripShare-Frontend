@@ -67,6 +67,14 @@ beforeEach(() => {
 });
 
 describe('RegisterForm', () => {
+  it('desabilita o cadastro com Google enquanto não há integração', () => {
+    renderRegisterForm();
+
+    expect(
+      screen.getByRole('button', { name: 'Continuar com o Google' }),
+    ).toBeDisabled();
+  });
+
   it('exibe erros para todos os campos obrigatórios vazios', async () => {
     const user = userEvent.setup();
     renderRegisterForm();
@@ -200,8 +208,8 @@ describe('RegisterForm', () => {
       name: 'Ana Silva',
     });
     expect(toastSuccessMock).toHaveBeenCalledWith(
-      'Cadastro realizado com sucesso!', 
-      {duration: 5000},
+      'Cadastro realizado com sucesso!',
+      { duration: 5000 },
     );
     expect(await screen.findByText('Página de login')).toBeInTheDocument();
   });
