@@ -58,6 +58,14 @@ beforeEach(() => {
 });
 
 describe('RegisterForm', () => {
+  it('desabilita o cadastro com Google enquanto não há integração', () => {
+    renderRegisterForm();
+
+    expect(
+      screen.getByRole('button', { name: 'Continuar com o Google' }),
+    ).toBeDisabled();
+  });
+
   it('exibe erros para todos os campos obrigatórios vazios', async () => {
     const user = userEvent.setup();
     renderRegisterForm();

@@ -248,7 +248,7 @@ export default function RegisterForm() {
       </header>
 
       <div className="register-social">
-        <button className="form-button register-google" type="button">
+        <button className="form-button register-google" type="button" disabled>
           <svg
             aria-hidden="true"
             focusable="false"
