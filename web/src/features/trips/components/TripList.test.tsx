@@ -29,25 +29,16 @@ const trips: Trip[] = [
 ];
 
 describe('TripList', () => {
-  it('abre a edição da viagem escolhida pelo botão do card', async () => {
-    const user = userEvent.setup();
-    const onEditTrip = vi.fn();
-    render(
-      <TripList trips={trips} onNewTrip={vi.fn()} onEditTrip={onEditTrip} />,
-    );
-
-    await user.click(
-      screen.getByRole('button', { name: 'Editar viagem Bate e volta' }),
-    );
-
-    expect(onEditTrip).toHaveBeenCalledWith(trips[1]);
-  });
-
   it('mostra o estado vazio e abre o formulário pelo botão', async () => {
     const user = userEvent.setup();
     const onNewTrip = vi.fn();
     render(
-      <TripList trips={[]} onNewTrip={onNewTrip} onEditTrip={vi.fn()} />,
+      <TripList
+        trips={[]}
+        onNewTrip={onNewTrip}
+        onEditTrip={vi.fn()}
+        onDeleteTrip={vi.fn()}
+      />,
     );
 
     expect(screen.getByText('Você ainda não tem viagens')).toBeInTheDocument();
@@ -59,7 +50,12 @@ describe('TripList', () => {
 
   it('lista as viagens com destino, período e duração', () => {
     render(
-      <TripList trips={trips} onNewTrip={vi.fn()} onEditTrip={vi.fn()} />,
+      <TripList
+        trips={trips}
+        onNewTrip={vi.fn()}
+        onEditTrip={vi.fn()}
+        onDeleteTrip={vi.fn()}
+      />,
     );
 
     const items = screen.getAllByRole('listitem');
@@ -80,5 +76,43 @@ describe('TripList', () => {
     expect(
       screen.queryByText('Você ainda não tem viagens'),
     ).not.toBeInTheDocument();
+  });
+
+  it('abre a edição da viagem escolhida pelo botão do card', async () => {
+    const user = userEvent.setup();
+    const onEditTrip = vi.fn();
+    render(
+      <TripList
+        trips={trips}
+        onNewTrip={vi.fn()}
+        onEditTrip={onEditTrip}
+        onDeleteTrip={vi.fn()}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole('button', { name: 'Editar viagem Bate e volta' }),
+    );
+
+    expect(onEditTrip).toHaveBeenCalledWith(trips[1]);
+  });
+
+  it('chama onDeleteTrip com a viagem do card clicado', async () => {
+    const user = userEvent.setup();
+    const onDeleteTrip = vi.fn();
+    render(
+      <TripList
+        trips={trips}
+        onNewTrip={vi.fn()}
+        onEditTrip={vi.fn()}
+        onDeleteTrip={onDeleteTrip}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole('button', { name: 'Excluir viagem Bate e volta' }),
+    );
+
+    expect(onDeleteTrip).toHaveBeenCalledWith(trips[1]);
   });
 });
