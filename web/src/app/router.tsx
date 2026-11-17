@@ -27,6 +27,10 @@ export const router = createBrowserRouter([
     element: <TouristSpotsPage />,
   },
   {
+    path: '/minhas-viagens/:tripId/explorar',
+    element: <TouristSpotsPage />,
+  },
+  {
     path: '/minhas-viagens/:tripId',
     element: <TripDetailPage />,
   },
