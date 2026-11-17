@@ -1,12 +1,19 @@
 
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import LoginForm from '../features/auth/components/LoginForm';
 import '../css/login.css';
-// import { login, getCurrentUserProfile } from '../services/authService';
-import { login } from '../services/authService';
+import { ApiError } from '../services/api';
+import {
+  getCurrentUserProfile,
+  login,
+  loginWithGoogle,
+} from '../services/authService';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState('');
 
   async function handleLogin(email: string, password: string) {
     await login(email, password);
@@ -18,6 +25,26 @@ export default function LoginPage() {
     //);
 
     navigate('/minhas-viagens');
+  }
+
+  async function handleGoogleLogin() {
+    setGoogleError('');
+    setGoogleLoading(true);
+
+    try {
+      await loginWithGoogle();
+      await getCurrentUserProfile();
+      navigate('/minhas-viagens', { replace: true });
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        navigate('/cadastro', { replace: true });
+        return;
+      }
+
+      setGoogleError('Não foi possível entrar com o Google. Tente novamente.');
+    } finally {
+      setGoogleLoading(false);
+    }
   }
 
   return (
@@ -47,10 +74,16 @@ export default function LoginPage() {
             <p>Digite suas credenciais para continuar</p>
           </header>
 
-          <button className="login-google" type="button" disabled>
+          <button
+            className="login-google"
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={googleLoading}
+          >
             <span aria-hidden="true" className="google-symbol">G</span>
-            Continuar com o Google
+            {googleLoading ? 'Conectando...' : 'Continuar com o Google'}
           </button>
+          {googleError && <p className="login-error" role="alert">{googleError}</p>}
 
           <div className="login-divider">
             <span />

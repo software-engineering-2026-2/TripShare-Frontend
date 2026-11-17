@@ -3,14 +3,23 @@ import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { login } from '../services/authService';
+import { ApiError } from '../services/api';
+import {
+  getCurrentUserProfile,
+  login,
+  loginWithGoogle,
+} from '../services/authService';
 import LoginPage from './LoginPage';
 
 vi.mock('../services/authService', () => ({
+  getCurrentUserProfile: vi.fn(),
   login: vi.fn(),
+  loginWithGoogle: vi.fn(),
 }));
 
+const getCurrentUserProfileMock = vi.mocked(getCurrentUserProfile);
 const loginMock = vi.mocked(login);
+const loginWithGoogleMock = vi.mocked(loginWithGoogle);
 
 function renderLoginPage() {
   return render(
@@ -35,6 +44,8 @@ afterEach(cleanup);
 
 beforeEach(() => {
   loginMock.mockReset();
+  loginWithGoogleMock.mockReset();
+  getCurrentUserProfileMock.mockReset();
 });
 
 describe('LoginPage', () => {
@@ -64,6 +75,39 @@ describe('LoginPage', () => {
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText('Página Minhas Viagens')).not.toBeInTheDocument();
+  });
+
+  it('redireciona usuário cadastrado para minhas viagens após entrar com o Google', async () => {
+    getCurrentUserProfileMock.mockResolvedValue({ id: 'user-1' });
+    const user = userEvent.setup();
+
+    renderLoginPage();
+    await user.click(screen.getByRole('button', { name: 'Continuar com o Google' }));
+
+    expect(await screen.findByText('Página Minhas Viagens')).toBeInTheDocument();
+    expect(getCurrentUserProfileMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('redireciona usuário sem cadastro para o formulário de cadastro', async () => {
+    getCurrentUserProfileMock.mockRejectedValue(new ApiError(404, null));
+    const user = userEvent.setup();
+
+    renderLoginPage();
+    await user.click(screen.getByRole('button', { name: 'Continuar com o Google' }));
+
+    expect(await screen.findByText('Página de cadastro')).toBeInTheDocument();
+  });
+
+  it('exibe erro quando não consegue consultar o perfil', async () => {
+    getCurrentUserProfileMock.mockRejectedValue(new ApiError(500, null));
+    const user = userEvent.setup();
+
+    renderLoginPage();
+    await user.click(screen.getByRole('button', { name: 'Continuar com o Google' }));
+
+    expect(
+      await screen.findByText('Não foi possível entrar com o Google. Tente novamente.'),
+    ).toBeInTheDocument();
   });
 
   it.each([

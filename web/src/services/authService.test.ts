@@ -3,26 +3,40 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from './api';
 
-const { authMock, createUserMock, signInMock, signOutMock } = vi.hoisted(
-  () => ({
-    authMock: { currentUser: null, authStateReady: vi.fn() },
-    createUserMock: vi.fn(),
-    signInMock: vi.fn(),
-    signOutMock: vi.fn(),
-  }),
-);
+const {
+  authMock,
+  createUserMock,
+  googleProviderMock,
+  signInMock,
+  signInWithPopupMock,
+  signOutMock,
+} = vi.hoisted(() => ({
+  authMock: { currentUser: null, authStateReady: vi.fn() },
+  createUserMock: vi.fn(),
+  googleProviderMock: class GoogleAuthProviderMock {},
+  signInMock: vi.fn(),
+  signInWithPopupMock: vi.fn(),
+  signOutMock: vi.fn(),
+}));
 
 vi.mock('../lib/firebase', () => ({
   auth: authMock,
 }));
 
 vi.mock('firebase/auth', () => ({
+  GoogleAuthProvider: googleProviderMock,
   createUserWithEmailAndPassword: createUserMock,
   signInWithEmailAndPassword: signInMock,
+  signInWithPopup: signInWithPopupMock,
   signOut: signOutMock,
 }));
 
-import { getIdToken, logout, register } from './authService';
+import {
+  getIdToken,
+  loginWithGoogle,
+  logout,
+  register,
+} from './authService';
 
 const profile = {
   username: 'joaosilva',
@@ -283,6 +297,20 @@ describe('logout', () => {
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(signOutMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('loginWithGoogle', () => {
+  it('autentica usando o provedor Google e retorna o usuário', async () => {
+    const user = { uid: 'google-user' };
+    signInWithPopupMock.mockResolvedValue({ user });
+
+    await expect(loginWithGoogle()).resolves.toBe(user);
+
+    expect(signInWithPopupMock).toHaveBeenCalledWith(
+      authMock,
+      expect.any(googleProviderMock),
+    );
   });
 });
 
