@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import LoginPage from '../pages/LoginPage';
 import MyTripsPage from '../pages/MyTripsPage';
 import RegisterPage from '../pages/RegisterPage';
+import TouristSpotsPage from '../pages/TouristSpotsPage';
 import TripDetailPage from '../pages/TripDetailPage';
 
 export const router = createBrowserRouter([
@@ -20,6 +21,10 @@ export const router = createBrowserRouter([
   {
     path: '/minhas-viagens',
     element: <MyTripsPage />,
+  },
+  {
+    path: '/pontos-turisticos',
+    element: <TouristSpotsPage />,
   },
   {
     path: '/minhas-viagens/:tripId',
