@@ -66,46 +66,16 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## Design Choices
 
+A identidade atual é **TripShare Coral**, com `--color-primary: #FF645C`. Essa escolha substitui a antiga paleta Copacabana Ocean.
 
-## 🎨 Paleta de Cores Oficial — *Copacabana Ocean*
-
-A identidade visual oficial do projeto utiliza o tema **Copacabana Ocean**, inspirado na orla e no mar do Rio de Janeiro, combinando tons de azul oceânico com superfícies claras e frescas.
-
-### Tokens Principais (CSS Variables em `web/src/index.css`)
-
-Os estilos são escritos em CSS puro: variáveis globais em `web/src/index.css` e um arquivo por tela em `web/src/css/`. O projeto não usa Tailwind nem biblioteca de componentes. Use a variável da tabela em vez do hex solto. Quando a variável ainda não existir, crie-a em `web/src/index.css` com o prefixo `--color-` e o hex da tabela.
-
-| Token | Variável CSS | Hex | Uso Principal |
-| :--- | :--- | :--- | :--- |
-| **Primary** | `--color-primary` | `#0077B6` | Botões principais, ícones de destaque, links ativos e badges |
-| **Primary Foreground** | `--color-on-primary` | `#FFFFFF` | Texto e ícones sobre elementos `--color-primary` |
-| **Brand Gradient (From)** | ainda não existe | `#0096C7` | Início do gradiente de ações de destaque (ex.: *Distribuir Viagem*, *Gerar Roteiro*) |
-| **Brand Gradient (To)** | `--color-primary-hover` (mesmo hex) | `#023E8A` | Fim do gradiente de ações de destaque |
-| **Background** | ainda não existe | `#F8FDFF` | Fundo geral das páginas (branco gelo suave) |
-| **Foreground** | `--color-text` | `#0A2540` | Texto principal e títulos (azul-marinho profundo) |
-| **Card / Popover** | `--color-surface` | `#FFFFFF` | Superfície de cartões, modais e popovers |
-| **Secondary / Muted** | `--color-surface-muted` | `#EBF5F8` | Fundos secundários, áreas agrupadas e containers sutis |
-| **Muted Foreground** | `--color-text-muted` | `#4A6B82` | Textos de apoio, legendas, horários e metadados |
-| **Accent** | ainda não existe | `#E0F0F6` | Estado de hover em botões secundários, menus e itens selecionáveis |
-| **Border** | `--color-border` | `#D8E8F0` | Divisórias, bordas de cartões e contornos |
-| **Input** | `--color-border-strong` | `#C5DCE8` | Bordas de campos de formulário e seletores |
-| **Ring** | `--color-focus-ring`, `--color-focus-ring-soft`, `--color-focus-ring-strong` | `#0077B6` (com transparência) | Anel de foco de acessibilidade (`focus-visible`) |
-| **Destructive** | `--color-danger` (fundo: `--color-danger-bg`) | `#C13515` | Alertas de conflito de horário e ações de exclusão |
-
-Não use `--accent`, `--accent-bg` nem `--accent-border` de `web/src/index.css`: são sobras do template do Vite (`#AA3BFF`) e não fazem parte da paleta.
-
-### Cores Semânticas dos Turnos do Roteiro
-
-Os turnos do cronograma diário e os pins do mapa mantêm cores semânticas fixas para rápida identificação visual. Essas variáveis ainda não existem no código; ao criá-las, use os nomes abaixo em `web/src/index.css`:
-
-| Turno | Horário | Variável CSS | Hex | Texto (`onColor`) |
-| :--- | :--- | :--- | :--- | :--- |
-| **Manhã** | `06:00 – 12:00` | `--color-shift-manha` | `#F5B301` | `#3D2C00` |
-| **Tarde** | `12:00 – 18:00` | `--color-shift-tarde` | `#F2711C` | `#FFFFFF` |
-| **Noite** | `18:00 – 00:00` | `--color-shift-noite` | `#38BDF8` | `#06304A` |
-| **Madrugada** | `00:00 – 06:00` | `--color-shift-madrugada` | `#7C3AED` | `#FFFFFF` |
-
-
+- Use os tokens de `web/src/commons/styles/global.css` e o CSS local em `web/src/pages/<tela>/styles.css`.
+- Leia `docs/design-system.md` antes de alterar a interface. O projeto usa CSS puro, sem Tailwind ou biblioteca de componentes.
+- Títulos usam Bricolage Grotesque e o corpo usa DM Sans. As fontes e licenças estão em `web/public/fonts/`.
+- Use `--color-on-primary` (escuro) sobre coral e `--color-link` para links em superfícies claras. Branco sobre coral não tem contraste suficiente para texto pequeno.
+- Preserve as cores semânticas dos turnos em `--color-shift-manha`, `--color-shift-tarde`, `--color-shift-noite` e `--color-shift-madrugada`. O azul do turno noturno e do mapa não representa a cor principal da marca.
+- Reutilize `Brand`, `JourneyArt`, `AppHeader`, `AuthLayout` e `ContentPage` conforme o contexto.
+- Mantenha foco visível, rótulos de formulário, alvos de pelo menos 44 px e respeito a `prefers-reduced-motion`.
+- Efeitos visuais não devem bloquear navegação, ocultar conteúdo ou reiniciar formulários durante a digitação.
 
 ## Project Instructions
 
