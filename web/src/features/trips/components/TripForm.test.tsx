@@ -103,7 +103,12 @@ describe('TripForm em modo de edição', () => {
   it('busca o novo destino quando ele é alterado', async () => {
     const user = userEvent.setup();
     const { onSubmit, onSearchDestinations } = renderEditForm();
-    const lisboa = { city: 'Lisboa', region: 'Lisboa', country: 'Portugal' };
+    const lisboa = {
+      id: 'd2',
+      city: 'Lisboa',
+      region: 'Lisboa',
+      country: 'Portugal',
+    };
     onSearchDestinations.mockResolvedValue([lisboa]);
 
     const destinationInput = screen.getByLabelText('Destino');

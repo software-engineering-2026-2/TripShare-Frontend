@@ -26,7 +26,9 @@ const parisTx: Destination = {
   country: 'Estados Unidos',
 };
 
-function renderForm(overrides: Partial<Parameters<typeof TripForm>[0]> = {}) {
+function renderForm(
+  overrides: Partial<Parameters<typeof TripForm>[0]> = {},
+) {
   const props = {
     onSubmit: vi.fn().mockResolvedValue(undefined),
     onCancel: vi.fn(),
@@ -51,7 +53,7 @@ function submit(user: ReturnType<typeof userEvent.setup>) {
   return user.click(screen.getByRole('button', { name: 'Criar viagem' }));
 }
 
-describe('TripForm', () => {
+describe('TripForm em modo de criação', () => {
   it('exibe erros para todos os campos vazios e não envia', async () => {
     const { user, props } = renderForm();
 
