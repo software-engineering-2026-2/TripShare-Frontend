@@ -1,21 +1,50 @@
 import { useState } from 'react';
-import NewTripForm from '../features/trips/components/NewTripForm';
+import TripForm from '../features/trips/components/TripForm';
 import TripList from '../features/trips/components/TripList';
-import { useCreateTrip, useTrips } from '../features/trips/useTrips';
+import {
+  useCreateTrip,
+  useTrips,
+  useUpdateTrip,
+} from '../features/trips/useTrips';
 import {
   searchDestinations,
   type CreateTripInput,
+  type Trip,
+  type UpdateTripInput,
 } from '../services/tripsService';
 import '../css/my-trips.css';
 
 export default function MyTripsPage() {
   const { data: trips, isPending, isError, refetch } = useTrips();
   const createTripMutation = useCreateTrip();
+  const updateTripMutation = useUpdateTrip();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
 
   async function handleCreateTrip(input: CreateTripInput) {
     await createTripMutation.mutateAsync(input);
     setIsFormOpen(false);
+  }
+
+  async function handleUpdateTrip(input: UpdateTripInput) {
+    if (!editingTrip) return;
+    await updateTripMutation.mutateAsync({ id: editingTrip.id, input });
+    closeForm();
+  }
+
+  function openNewTripForm() {
+    setEditingTrip(null);
+    setIsFormOpen(true);
+  }
+
+  function openEditTripForm(trip: Trip) {
+    setEditingTrip(trip);
+    setIsFormOpen(true);
+  }
+
+  function closeForm() {
+    setIsFormOpen(false);
+    setEditingTrip(null);
   }
 
   return (
@@ -31,7 +60,7 @@ export default function MyTripsPage() {
           <button
             className="form-button my-trips__primary-button"
             type="button"
-            onClick={() => setIsFormOpen(true)}
+            onClick={openNewTripForm}
           >
             Nova viagem
           </button>
@@ -53,7 +82,11 @@ export default function MyTripsPage() {
         )}
 
         {trips && (
-          <TripList trips={trips} onNewTrip={() => setIsFormOpen(true)} />
+          <TripList
+            trips={trips}
+            onNewTrip={openNewTripForm}
+            onEditTrip={openEditTripForm}
+          />
         )}
       </div>
 
@@ -63,14 +96,16 @@ export default function MyTripsPage() {
             className="my-trips__modal"
             role="dialog"
             aria-modal="true"
-            aria-labelledby="new-trip-title"
+            aria-labelledby="trip-form-title"
           >
-            <h2 className="my-trips__modal-title" id="new-trip-title">
-              Criar nova viagem
+            <h2 className="my-trips__modal-title" id="trip-form-title">
+              {editingTrip ? 'Editar viagem' : 'Criar nova viagem'}
             </h2>
-            <NewTripForm
-              onSubmit={handleCreateTrip}
-              onCancel={() => setIsFormOpen(false)}
+            <TripForm
+              key={editingTrip?.id ?? 'new'}
+              trip={editingTrip ?? undefined}
+              onSubmit={editingTrip ? handleUpdateTrip : handleCreateTrip}
+              onCancel={closeForm}
               onSearchDestinations={searchDestinations}
             />
           </section>

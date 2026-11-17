@@ -119,6 +119,20 @@
   box-shadow: var(--my-trips-card-shadow);
 }
 
+.trip-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.trip-card__edit-button {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 12px;
+  font-size: 14px;
+}
+
 .trip-card__title {
   margin: 0 0 6px;
   color: var(--color-text);
@@ -130,6 +144,20 @@
 .trip-card__info {
   color: var(--color-text-muted);
   font-size: 15px;
+}
+
+.trip-card__footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+.trip-card__explore-link {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 14px;
+  text-decoration: none;
 }
 
 .trip-list__empty {
