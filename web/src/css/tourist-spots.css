@@ -186,6 +186,19 @@
   font-size: 15px;
 }
 
+.tourist-spots__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.tourist-spots__page-info {
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
 @media (max-width: 640px) {
   .tourist-spots__container {
     padding: 20px 12px;

@@ -1,5 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Trip } from '../../../services/tripsService';
 import TripList from './TripList';
@@ -28,18 +29,34 @@ const trips: Trip[] = [
   },
 ];
 
+function renderTripList({
+  list = trips,
+  onNewTrip = vi.fn(),
+  onEditTrip = vi.fn(),
+  onDeleteTrip = vi.fn(),
+}: {
+  list?: Trip[];
+  onNewTrip?: () => void;
+  onEditTrip?: (trip: Trip) => void;
+  onDeleteTrip?: (trip: Trip) => void;
+} = {}) {
+  render(
+    <MemoryRouter>
+      <TripList
+        trips={list}
+        onNewTrip={onNewTrip}
+        onEditTrip={onEditTrip}
+        onDeleteTrip={onDeleteTrip}
+      />
+    </MemoryRouter>,
+  );
+}
+
 describe('TripList', () => {
   it('mostra o estado vazio e abre o formulário pelo botão', async () => {
     const user = userEvent.setup();
     const onNewTrip = vi.fn();
-    render(
-      <TripList
-        trips={[]}
-        onNewTrip={onNewTrip}
-        onEditTrip={vi.fn()}
-        onDeleteTrip={vi.fn()}
-      />,
-    );
+    renderTripList({ list: [], onNewTrip });
 
     expect(screen.getByText('Você ainda não tem viagens')).toBeInTheDocument();
 
@@ -49,14 +66,7 @@ describe('TripList', () => {
   });
 
   it('lista as viagens com destino, período e duração', () => {
-    render(
-      <TripList
-        trips={trips}
-        onNewTrip={vi.fn()}
-        onEditTrip={vi.fn()}
-        onDeleteTrip={vi.fn()}
-      />,
-    );
+    renderTripList();
 
     const items = screen.getAllByRole('listitem');
     expect(items).toHaveLength(2);
@@ -81,14 +91,7 @@ describe('TripList', () => {
   it('abre a edição da viagem escolhida pelo botão do card', async () => {
     const user = userEvent.setup();
     const onEditTrip = vi.fn();
-    render(
-      <TripList
-        trips={trips}
-        onNewTrip={vi.fn()}
-        onEditTrip={onEditTrip}
-        onDeleteTrip={vi.fn()}
-      />,
-    );
+    renderTripList({ onEditTrip });
 
     await user.click(
       screen.getByRole('button', { name: 'Editar viagem Bate e volta' }),
@@ -100,19 +103,20 @@ describe('TripList', () => {
   it('chama onDeleteTrip com a viagem do card clicado', async () => {
     const user = userEvent.setup();
     const onDeleteTrip = vi.fn();
-    render(
-      <TripList
-        trips={trips}
-        onNewTrip={vi.fn()}
-        onEditTrip={vi.fn()}
-        onDeleteTrip={onDeleteTrip}
-      />,
-    );
+    renderTripList({ onDeleteTrip });
 
     await user.click(
       screen.getByRole('button', { name: 'Excluir viagem Bate e volta' }),
     );
 
     expect(onDeleteTrip).toHaveBeenCalledWith(trips[1]);
+  });
+
+  it('leva para a tela da viagem pelo botão Explorar viagem', () => {
+    renderTripList();
+
+    expect(
+      screen.getByRole('link', { name: 'Explorar viagem Férias de verão' }),
+    ).toHaveAttribute('href', '/minhas-viagens/1');
   });
 });

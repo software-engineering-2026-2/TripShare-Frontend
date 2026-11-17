@@ -1,7 +1,7 @@
 // Dados falsos para visualizar a tela de pontos turísticos sem back-end (ativados com VITE_USE_MOCKS=true)
 // Apagar quando a API estiver pronta
 import { ApiError } from './api';
-import type { OpeningHours, Place } from './placesService';
+import type { OpeningHours, Place, PlacesPage } from './placesService';
 
 const PHOTOS_URL = 'https://upload.wikimedia.org/wikipedia/commons/thumb';
 
@@ -139,9 +139,22 @@ function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function mockGetPlaces(): Promise<Place[]> {
+export async function mockGetPlaces(
+  page = 0,
+  size = 20,
+): Promise<PlacesPage> {
   await wait(400);
-  return [...places];
+  const start = page * size;
+  const content = places.slice(start, start + size);
+  const totalPages = Math.ceil(places.length / size);
+  return {
+    content,
+    page,
+    size,
+    totalElements: places.length,
+    totalPages,
+    last: page >= totalPages - 1,
+  };
 }
 
 export async function mockGetPlace(id: string): Promise<Place> {

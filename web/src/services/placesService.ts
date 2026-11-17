@@ -5,10 +5,15 @@ import { mockGetPlace, mockGetPlaces } from './placesMock';
 // Remover junto com placesMock.ts quando o back-end estiver pronto.
 const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true';
 
-// Tipos provisórios, baseados nas tabelas places, place_categories, place_images e
-// place_opening_hours do back-end; devem ser substituídos pelos gerados a partir do OpenAPI.
+// Tipos baseados nas tabelas places, place_categories, place_images e place_opening_hours do back-end.
 export type PlaceCategory =
-  'BEACH' | 'TRAIL' | 'RESTAURANT' | 'CAFE' | 'MUSEUM' | 'LANDMARK' | 'WINERY';
+  | 'BEACH'
+  | 'TRAIL'
+  | 'RESTAURANT'
+  | 'CAFE'
+  | 'MUSEUM'
+  | 'LANDMARK'
+  | 'WINERY';
 
 export interface PlacePhoto {
   url: string;
@@ -48,31 +53,42 @@ export interface Place {
   source?: string | null;
 }
 
-// Endpoint ainda não confirmado com o back-end.
-export function getPlaces(): Promise<Place[]> {
-  if (USE_MOCKS) return mockGetPlaces();
-  return request<Place[]>('/places');
+export interface PlacesPage {
+  content: Place[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
 }
 
-// Resposta do GET /places/{id}. Os campos principais seguem o PlaceResponse do
-// back-end; categorias, imagens, horários e fonte ainda precisam ser expostos
-// por ele e, enquanto isso, chegam ausentes e aparecem como "Não informado".
+// Resposta do GET /places/{id} e GET /trips/{id}/places. Os campos opcionais
+// podem chegar ausentes na listagem resumida e aparecem como "Não informado" nos detalhes.
 export interface PlaceDetailsResponse {
   id: string;
   name: string;
-  address: string | null;
-  neighborhood: string | null;
-  description: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  estimatedVisitMinutes: number | null;
-  estimatedCost: number | null;
+  address?: string | null;
+  neighborhood?: string | null;
+  description?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  estimatedVisitMinutes?: number | null;
+  estimatedCost?: number | null;
   // Código ISO 4217 (ex.: BRL)
-  currency: string | null;
+  currency?: string | null;
   categories?: string[] | null;
   images?: PlacePhoto[] | null;
   openingHours?: OpeningHours[] | null;
   source?: string | null;
+}
+
+interface PlacesPageResponse {
+  content: PlaceDetailsResponse[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
 }
 
 const PLACE_CATEGORIES: readonly PlaceCategory[] = [
@@ -90,8 +106,8 @@ function isPlaceCategory(code: string): code is PlaceCategory {
 }
 
 export function formatCost(
-  value: number | null,
-  currency: string | null,
+  value: number | null | undefined,
+  currency: string | null | undefined,
 ): string | null {
   if (value === null || value === undefined) return null;
   if (value === 0) return 'Gratuito';
@@ -141,6 +157,32 @@ export function toPlace(response: PlaceDetailsResponse): Place {
     estimatedDurationMinutes: response.estimatedVisitMinutes ?? null,
     cost: formatCost(response.estimatedCost, response.currency),
     source: response.source ?? null,
+  };
+}
+
+// RF-09: GET /trips/{id}/places?page=0&size=20
+export async function getPlaces(
+  tripId: string,
+  page = 0,
+  size = 20,
+): Promise<PlacesPage> {
+  if (USE_MOCKS) return mockGetPlaces(page, size);
+
+  const token = await getIdToken();
+  const params = new URLSearchParams({
+    page: String(page),
+    size: String(size),
+  });
+  const response = await request<PlacesPageResponse>(
+    `/trips/${encodeURIComponent(tripId)}/places?${params.toString()}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
+
+  return {
+    ...response,
+    content: response.content.map(toPlace),
   };
 }
 

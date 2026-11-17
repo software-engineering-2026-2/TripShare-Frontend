@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createTrip,
   deleteTrip,
+  getTrip,
+  getTripActivities,
   getTripDeletionSummary,
   getTrips,
   updateTrip,
@@ -24,6 +26,20 @@ export function useTrips() {
   return useQuery({
     queryKey: ['trips'],
     queryFn: getTrips,
+  });
+}
+
+export function useTrip(id: string) {
+  return useQuery({
+    queryKey: ['trips', id],
+    queryFn: () => getTrip(id),
+  });
+}
+
+export function useTripActivities(tripId: string) {
+  return useQuery({
+    queryKey: ['trips', tripId, 'activities'],
+    queryFn: () => getTripActivities(tripId),
   });
 }
 

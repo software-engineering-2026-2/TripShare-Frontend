@@ -4,6 +4,8 @@ import { getIdToken } from './authService';
 import {
   mockCreateTrip,
   mockDeleteTrip,
+  mockGetTrip,
+  mockGetTripActivities,
   mockGetTripDeletionSummary,
   mockGetTrips,
   mockSearchDestinations,
@@ -41,6 +43,29 @@ export interface TripDeletionSummary {
   itineraryCount: number;
   publishedItineraryCount: number;
   favoriteCount: number;
+}
+
+// Posição no mapa ilustrativo; na integração deve virar latitude/longitude.
+export interface MapPosition {
+  x: number;
+  y: number;
+}
+
+export interface TripActivity {
+  id: string;
+  // 1 = primeiro dia da viagem
+  dayNumber: number;
+  name: string;
+  location: string;
+  durationMinutes: number;
+  // Horário fixo de início (HH:MM), quando houver
+  startsAt: string | null;
+  mapPosition: MapPosition;
+}
+
+export interface TripActivities {
+  lodging: { name: string; mapPosition: MapPosition };
+  activities: TripActivity[];
 }
 
 // Campos usados de TripResponse do back-end (dto/TripResponse.java).
@@ -95,6 +120,18 @@ export async function getTrips(): Promise<Trip[]> {
     headers: await authHeaders(),
   });
   return trips.map(toTrip);
+}
+
+// Endpoint ainda não confirmado com o back-end.
+export function getTrip(id: string): Promise<Trip> {
+  if (USE_MOCKS) return mockGetTrip(id);
+  return request<Trip>(`/trips/${id}`);
+}
+
+// Endpoint ainda não confirmado com o back-end.
+export function getTripActivities(tripId: string): Promise<TripActivities> {
+  if (USE_MOCKS) return mockGetTripActivities(tripId);
+  return request<TripActivities>(`/trips/${tripId}/activities`);
 }
 
 export async function createTrip(input: CreateTripInput): Promise<Trip> {

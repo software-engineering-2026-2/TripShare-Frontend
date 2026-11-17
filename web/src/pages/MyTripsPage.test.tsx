@@ -8,6 +8,7 @@ import {
   within,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // USE_MOCKS e API_URL são lidos ao carregar o módulo; por isso o stub fica no vi.hoisted.
@@ -67,7 +68,9 @@ function renderPage() {
   });
   render(
     <QueryClientProvider client={queryClient}>
-      <MyTripsPage />
+      <MemoryRouter>
+        <MyTripsPage />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
   return userEvent.setup();

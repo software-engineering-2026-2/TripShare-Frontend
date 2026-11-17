@@ -6,6 +6,7 @@ import PlaceDetailsPage from '../pages/PlaceDetailsPage';
 import PublicProfilePage from '../pages/PublicProfilePage';
 import RegisterPage from '../pages/RegisterPage';
 import TouristSpotsPage from '../pages/TouristSpotsPage';
+import TripDetailPage from '../pages/TripDetailPage';
 
 export const router = createBrowserRouter([
   {
@@ -23,6 +24,14 @@ export const router = createBrowserRouter([
   {
     path: '/minhas-viagens',
     element: <MyTripsPage />,
+  },
+  {
+    path: '/minhas-viagens/:tripId',
+    element: <TripDetailPage />,
+  },
+  {
+    path: '/minhas-viagens/:tripId/explorar',
+    element: <TouristSpotsPage />,
   },
   {
     path: '/pontos-turisticos',
