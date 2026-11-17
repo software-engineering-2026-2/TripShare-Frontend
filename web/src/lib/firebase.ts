@@ -8,8 +8,10 @@ const firebaseConfig = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUMENT_ID
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUMENT_ID,
 };
+
+const app = initializeApp(firebaseConfig);
 
 const hasFirebaseConfig = Boolean(
   firebaseConfig.apiKey &&
@@ -18,14 +20,4 @@ const hasFirebaseConfig = Boolean(
     firebaseConfig.appId,
 );
 
-export const auth: Auth | null = hasFirebaseConfig
-  ? getAuth(initializeApp(firebaseConfig))
-  : null;
-
-export function requireAuth(): Auth {
-  if (!auth) {
-    throw new Error('Firebase não está configurado.');
-  }
-
-  return auth;
-}
+export const auth: Auth | null = hasFirebaseConfig ? getAuth(app) : null;

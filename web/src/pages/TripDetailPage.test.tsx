@@ -53,6 +53,7 @@ beforeEach(() => {
     id: '1',
     title: 'Férias de verão',
     destination: {
+      id: 'd1',
       city: 'Rio de Janeiro',
       region: 'Rio de Janeiro',
       country: 'Brasil',

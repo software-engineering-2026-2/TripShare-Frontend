@@ -1,9 +1,16 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
+import type { ReactElement } from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { Place } from '../../../services/placesService';
 import PlaceList from './PlaceList';
 
 afterEach(cleanup);
+
+// O card tem um link para os detalhes, que precisa de um roteador.
+function renderWithRouter(ui: ReactElement) {
+  return render(<MemoryRouter>{ui}</MemoryRouter>);
+}
 
 const places: Place[] = [
   {
@@ -28,8 +35,16 @@ const places: Place[] = [
 ];
 
 describe('PlaceList', () => {
+  it('leva aos detalhes do lugar ao clicar no card', () => {
+    renderWithRouter(<PlaceList places={places} />);
+
+    expect(
+      screen.getByRole('link', { name: 'Museu do Amanhã' }),
+    ).toHaveAttribute('href', '/locais/1');
+  });
+
   it('mostra foto, categoria, bairro e horário de cada lugar', () => {
-    render(<PlaceList places={places} />);
+    renderWithRouter(<PlaceList places={places} />);
 
     const card = screen
       .getByRole('heading', { name: 'Museu do Amanhã' })
@@ -47,7 +62,7 @@ describe('PlaceList', () => {
   });
 
   it('usa alternativas quando faltam foto e bairro', () => {
-    render(<PlaceList places={places} />);
+    renderWithRouter(<PlaceList places={places} />);
 
     const card = screen
       .getByRole('heading', { name: 'Aprazível' })
@@ -60,7 +75,7 @@ describe('PlaceList', () => {
   });
 
   it('mostra aviso quando não há lugares', () => {
-    render(<PlaceList places={[]} />);
+    renderWithRouter(<PlaceList places={[]} />);
 
     expect(
       screen.getByText('Nenhum ponto turístico encontrado'),

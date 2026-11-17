@@ -1,7 +1,9 @@
 import { FirebaseError } from 'firebase/app';
 import {
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   type User,
 } from 'firebase/auth';
@@ -17,8 +19,13 @@ export interface RegisterProfileInput {
   hometown?: string;
 }
 
+// Perfil completo do usuário autenticado, retornado por /auth/register,
+// /auth/login e PATCH /users/me.
 export interface UserProfile {
   id: string;
+  authId: string;
+  // UID do Firebase
+  uuid: string;
   username: string;
   name: string;
   email: string;
@@ -28,23 +35,32 @@ export interface UserProfile {
   role: string;
   status: string;
   createdAt: string;
+  updatedAt: string;
 }
 
-function getConfiguredAuth() {
+function requireAuth() {
   if (!auth) {
-    throw new Error('Firebase não está configurado.');
+    throw new Error('Firebase não está configurado neste ambiente.');
   }
 
   return auth;
 }
 
 export async function login(email: string, password: string) {
-  const firebaseAuth = getConfiguredAuth();
+  const configuredAuth = requireAuth();
   const credential = await signInWithEmailAndPassword(
-    firebaseAuth,
+    configuredAuth,
     email,
     password,
   );
+
+  return credential.user;
+}
+
+export async function loginWithGoogle() {
+  const configuredAuth = requireAuth();
+  const provider = new GoogleAuthProvider();
+  const credential = await signInWithPopup(configuredAuth, provider);
 
   return credential.user;
 }
@@ -53,10 +69,11 @@ async function createFirebaseUserOrRecover(
   email: string,
   password: string,
 ): Promise<User> {
-  const firebaseAuth = getConfiguredAuth();
+  const configuredAuth = requireAuth();
+
   try {
     const credential = await createUserWithEmailAndPassword(
-      firebaseAuth,
+      configuredAuth,
       email,
       password,
     );
@@ -74,7 +91,7 @@ async function createFirebaseUserOrRecover(
     // anterior falhou após criar a conta). Recupera a sessão existente
     // para concluir apenas o cadastro do perfil.
     const credential = await signInWithEmailAndPassword(
-      firebaseAuth,
+      configuredAuth,
       email,
       password,
     );
@@ -103,9 +120,7 @@ export async function register(
     if (error instanceof ApiError && error.status === 401) {
       // Token rejeitado pelo backend: encerra a sessão local criada
       // nesta tentativa para não deixar estado inconsistente.
-      if (auth) {
-        await signOut(auth);
-      }
+      await signOut(requireAuth());
     }
 
     throw error;
@@ -113,7 +128,10 @@ export async function register(
 }
 
 export async function getIdToken() {
-  const user = getConfiguredAuth().currentUser;
+  // Ao recarregar a página, o Firebase ainda está restaurando a sessão.
+  const configuredAuth = requireAuth();
+  await configuredAuth.authStateReady();
+  const user = configuredAuth.currentUser;
 
   if (!user) {
     throw new Error('Usuário não autenticado.');
@@ -122,23 +140,30 @@ export async function getIdToken() {
   return user.getIdToken();
 }
 
-export async function getCurrentUserProfile() {
-  const token = await getIdToken();
+// O back-end não tem /auth/me: o perfil do usuário autenticado vem de
+// POST /auth/login, com o UID do Firebase no corpo. Responde 404 quando
+// ainda não existe perfil para esse UID.
+export async function getCurrentUserProfile(): Promise<UserProfile> {
+  const user = requireAuth().currentUser;
 
-  return request('/auth/me', {
+  if (!user) {
+    throw new Error('Usuário não autenticado.');
+  }
+
+  const token = await user.getIdToken();
+
+  return request<UserProfile>('/auth/login', {
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
     },
+    body: JSON.stringify({ uuid: user.uid }),
   });
 }
 
 export async function logout() {
-  const firebaseAuth = auth;
-  if (!firebaseAuth) {
-    return;
-  }
-
-  const user = firebaseAuth.currentUser;
+  const configuredAuth = requireAuth();
+  const user = configuredAuth.currentUser;
 
   if (!user) {
     return;
@@ -154,6 +179,6 @@ export async function logout() {
       },
     });
   } finally {
-    await signOut(firebaseAuth);
+    await signOut(configuredAuth);
   }
 }

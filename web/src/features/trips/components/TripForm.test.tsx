@@ -1,15 +1,33 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi, type Mock } from 'vitest';
+import { ApiError } from '../../../services/api';
 import type { Trip } from '../../../services/tripsService';
 import TripForm from './TripForm';
 
 afterEach(cleanup);
 
+function periodConflictError(
+  conflicts: { dayNumber: number; activityCount: number }[],
+) {
+  return new ApiError(409, {
+    status: 409,
+    message: 'Cannot shorten trip',
+    conflicts,
+  });
+}
+
 const trip: Trip = {
   id: '1',
   title: 'Férias de verão',
   destination: {
+    id: 'd1',
     city: 'Rio de Janeiro',
     region: 'Rio de Janeiro',
     country: 'Brasil',
@@ -85,7 +103,12 @@ describe('TripForm em modo de edição', () => {
   it('busca o novo destino quando ele é alterado', async () => {
     const user = userEvent.setup();
     const { onSubmit, onSearchDestinations } = renderEditForm();
-    const lisboa = { city: 'Lisboa', region: 'Lisboa', country: 'Portugal' };
+    const lisboa = {
+      id: 'd2',
+      city: 'Lisboa',
+      region: 'Lisboa',
+      country: 'Portugal',
+    };
     onSearchDestinations.mockResolvedValue([lisboa]);
 
     const destinationInput = screen.getByLabelText('Destino');
@@ -110,5 +133,227 @@ describe('TripForm em modo de edição', () => {
         'Não foi possível salvar as alterações. Tente novamente.',
       ),
     ).toBeInTheDocument();
+  });
+
+  it.each([
+    [
+      403,
+      'You do not own this trip',
+      'Você não tem permissão para alterar esta viagem.',
+    ],
+    [404, 'Trip not found', 'Esta viagem não existe mais.'],
+  ])(
+    'no %i do back-end mostra o motivo e não deixa salvar de novo',
+    async (status, message, expected) => {
+      const user = userEvent.setup();
+      renderEditForm(
+        vi.fn().mockRejectedValue(new ApiError(status, { status, message })),
+      );
+
+      await user.click(
+        screen.getByRole('button', { name: 'Salvar alterações' }),
+      );
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(expected);
+      expect(
+        screen.getByRole('button', { name: 'Salvar alterações' }),
+      ).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Cancelar' })).toBeEnabled();
+    },
+  );
+
+  it('lista os dias em conflito quando o back-end recusa a redução do período', async () => {
+    const user = userEvent.setup();
+    renderEditForm(
+      vi.fn().mockRejectedValue(
+        periodConflictError([
+          { dayNumber: 9, activityCount: 2 },
+          { dayNumber: 11, activityCount: 1 },
+        ]),
+      ),
+    );
+
+    fireEvent.change(screen.getByLabelText('Data de término'), {
+      target: { value: '2027-01-15' },
+    });
+    await user.click(screen.getByRole('button', { name: 'Salvar alterações' }));
+
+    expect(
+      await screen.findByText(/O novo período deixa de fora dias/),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Dia 9: 2 atividades')).toBeInTheDocument();
+    expect(screen.getByText('Dia 11: 1 atividade')).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        'Não foi possível salvar as alterações. Tente novamente.',
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Salvar alterações' }),
+    ).toBeEnabled();
+  });
+
+  it('esconde os conflitos quando as datas são alteradas', async () => {
+    const user = userEvent.setup();
+    renderEditForm(
+      vi
+        .fn()
+        .mockRejectedValue(
+          periodConflictError([{ dayNumber: 11, activityCount: 1 }]),
+        ),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Salvar alterações' }));
+    expect(await screen.findByText('Dia 11: 1 atividade')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Data de término'), {
+      target: { value: '2027-01-21' },
+    });
+
+    expect(screen.queryByText('Dia 11: 1 atividade')).not.toBeInTheDocument();
+  });
+
+  it('mostra o erro de período no campo de término quando o back-end responde 400', async () => {
+    const user = userEvent.setup();
+    renderEditForm(
+      vi.fn().mockRejectedValue(
+        new ApiError(400, {
+          status: 400,
+          message: 'End date cannot be before start date',
+        }),
+      ),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Salvar alterações' }));
+
+    expect(
+      await screen.findByText(
+        'A data de término não pode ser antes da data de início.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Data de término')).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
+  });
+
+  describe('após um 409 de conflito de período', () => {
+    const conflicts = [
+      { dayNumber: 9, activityCount: 2 },
+      { dayNumber: 11, activityCount: 1 },
+    ];
+
+    async function shortenAndGetConflicts(onSubmit: Mock) {
+      const user = userEvent.setup();
+      onSubmit.mockRejectedValueOnce(periodConflictError(conflicts));
+      renderEditForm(onSubmit);
+
+      // 10/01 a 16/01: 7 dias, deixando de fora os dias 9 e 11.
+      fireEvent.change(screen.getByLabelText('Data de término'), {
+        target: { value: '2027-01-16' },
+      });
+      await user.click(
+        screen.getByRole('button', { name: 'Salvar alterações' }),
+      );
+      await screen.findByText('Dia 9: 2 atividades');
+      return user;
+    }
+
+    it('exige uma escolha para cada dia antes de salvar de novo', async () => {
+      const onSubmit = vi.fn();
+      const user = await shortenAndGetConflicts(onSubmit);
+
+      await user.click(
+        screen.getByRole('radio', { name: 'Remover 1 atividade' }),
+      );
+      await user.click(
+        screen.getByRole('button', { name: 'Salvar alterações' }),
+      );
+
+      expect(
+        screen.getByText('Escolha o que fazer com as atividades de cada dia.'),
+      ).toBeInTheDocument();
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+
+    it('reenvia o período com as escolhas de mover e remover', async () => {
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      const user = await shortenAndGetConflicts(onSubmit);
+
+      const day9 = screen.getByRole('group', { name: 'Dia 9: 2 atividades' });
+      await user.click(
+        within(day9).getByRole('radio', { name: 'Mover para o dia' }),
+      );
+      await user.selectOptions(
+        screen.getByLabelText('Dia de destino das atividades do dia 9'),
+        'Dia 5',
+      );
+      await user.click(
+        screen.getByRole('radio', { name: 'Remover 1 atividade' }),
+      );
+      await user.click(
+        screen.getByRole('button', { name: 'Salvar alterações' }),
+      );
+
+      expect(onSubmit).toHaveBeenCalledTimes(2);
+      expect(onSubmit).toHaveBeenLastCalledWith({
+        title: 'Férias de verão',
+        destination: trip.destination,
+        startDate: '2027-01-10',
+        endDate: '2027-01-16',
+        resolutions: [
+          { dayNumber: 9, action: 'MOVE', targetDay: 5 },
+          { dayNumber: 11, action: 'REMOVE' },
+        ],
+      });
+    });
+
+    it('pede para salvar de novo quando o back-end recusa as escolhas', async () => {
+      const onSubmit = vi.fn().mockRejectedValue(
+        new ApiError(400, {
+          status: 400,
+          message:
+            'Trip must specify a valid date range or a positive duration in days',
+        }),
+      );
+      const user = await shortenAndGetConflicts(onSubmit);
+
+      await user.click(
+        screen.getByRole('radio', { name: 'Remover 2 atividades' }),
+      );
+      await user.click(
+        screen.getByRole('radio', { name: 'Remover 1 atividade' }),
+      );
+      await user.click(
+        screen.getByRole('button', { name: 'Salvar alterações' }),
+      );
+
+      expect(
+        await screen.findByText(
+          'Os dias em conflito mudaram. Salve novamente para ver a lista atualizada.',
+        ),
+      ).toBeInTheDocument();
+      expect(screen.queryByText('Dia 9: 2 atividades')).not.toBeInTheDocument();
+    });
+
+    it('descarta conflitos e escolhas quando as datas mudam', async () => {
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      const user = await shortenAndGetConflicts(onSubmit);
+
+      await user.click(
+        screen.getByRole('radio', { name: 'Remover 1 atividade' }),
+      );
+      fireEvent.change(screen.getByLabelText('Data de término'), {
+        target: { value: '2027-01-21' },
+      });
+      await user.click(
+        screen.getByRole('button', { name: 'Salvar alterações' }),
+      );
+
+      expect(screen.queryByText('Dia 11: 1 atividade')).not.toBeInTheDocument();
+      expect(onSubmit).toHaveBeenLastCalledWith(
+        expect.not.objectContaining({ resolutions: expect.anything() }),
+      );
+    });
   });
 });

@@ -1,10 +1,19 @@
 import { useState } from 'react';
 import type {
-  CreateTripInput,
   Destination,
   Trip,
+  UpdateTripInput,
 } from '../../../services/tripsService';
 import {
+  getPeriodConflicts,
+  isInvalidPeriodError,
+  isInvalidResolutionError,
+  type DayConflict,
+  type DayResolution,
+} from '../periodConflicts';
+import { getTripAccessErrorMessage } from '../tripAccessError';
+import {
+  END_BEFORE_START_MESSAGE,
   formatDayCount,
   formatDestination,
   getTripDays,
@@ -14,6 +23,7 @@ import {
   validateTitle,
 } from '../tripValidation';
 import DestinationOptions from './DestinationOptions';
+import PeriodConflictResolver from './PeriodConflictResolver';
 
 type TripField = 'title' | 'destination' | 'startDate' | 'endDate';
 
@@ -21,7 +31,8 @@ type TripValues = Record<TripField, string>;
 type TripErrors = Partial<Record<TripField, string>>;
 
 interface TripFormProps {
-  onSubmit: (input: CreateTripInput) => Promise<void>;
+  // Na criação, `resolutions` nunca é enviado (só existe após um 409 da edição).
+  onSubmit: (input: UpdateTripInput) => Promise<void>;
   onCancel: () => void;
   onSearchDestinations: (query: string) => Promise<Destination[]>;
   // Quando informada, o formulário abre preenchido para edição.
@@ -69,7 +80,14 @@ export default function TripForm({
   const [selectedDestination, setSelectedDestination] =
     useState<Destination | null>(trip?.destination ?? null);
   const [submitError, setSubmitError] = useState('');
+  const [periodConflicts, setPeriodConflicts] = useState<DayConflict[]>([]);
+  const [resolutions, setResolutions] = useState<
+    Partial<Record<number, DayResolution>>
+  >({});
+  const [resolutionError, setResolutionError] = useState('');
   const [loading, setLoading] = useState(false);
+  // 403/404 no PATCH: a viagem não é do usuário ou foi excluída, então salvar de novo não adianta.
+  const [isAccessDenied, setIsAccessDenied] = useState(false);
 
   const days = getTripDays(values.startDate, values.endDate);
   const submitLabel = isEditing ? 'Salvar alterações' : 'Criar viagem';
@@ -82,6 +100,11 @@ export default function TripForm({
     if (field === 'destination') {
       setDestinationOptions([]);
       setSelectedDestination(null);
+    }
+
+    // Os conflitos se referem ao período enviado; mudar as datas os invalida.
+    if (field === 'startDate' || field === 'endDate') {
+      clearPeriodConflicts();
     }
 
     // Só revalida campos que já estão mostrando erro.
@@ -97,6 +120,28 @@ export default function TripForm({
 
       return updatedErrors;
     });
+  }
+
+  function clearPeriodConflicts() {
+    setPeriodConflicts([]);
+    setResolutions({});
+    setResolutionError('');
+  }
+
+  function handleResolutionChange(resolution: DayResolution) {
+    setResolutions((current) => ({
+      ...current,
+      [resolution.dayNumber]: resolution,
+    }));
+    setResolutionError('');
+  }
+
+  // Escolhas de todos os dias em conflito, ou null se algum ainda estiver sem escolha.
+  function getChosenResolutions(): DayResolution[] | null {
+    const chosen = periodConflicts.map(
+      (conflict) => resolutions[conflict.dayNumber],
+    );
+    return chosen.every(Boolean) ? (chosen as DayResolution[]) : null;
   }
 
   function handleBlur(field: TripField) {
@@ -155,6 +200,14 @@ export default function TripForm({
       return;
     }
 
+    const chosenResolutions =
+      periodConflicts.length > 0 ? getChosenResolutions() : undefined;
+
+    if (chosenResolutions === null) {
+      setResolutionError('Escolha o que fazer com as atividades de cada dia.');
+      return;
+    }
+
     setLoading(true);
 
     let destination: Destination | null;
@@ -178,8 +231,43 @@ export default function TripForm({
         destination,
         startDate: values.startDate,
         endDate: values.endDate,
+        ...(chosenResolutions && { resolutions: chosenResolutions }),
       });
-    } catch {
+    } catch (error) {
+      const conflicts = getPeriodConflicts(error);
+
+      if (conflicts) {
+        setPeriodConflicts(conflicts);
+        setResolutions({});
+        return;
+      }
+
+      // O back recusou as escolhas: os conflitos mudaram desde o 409.
+      if (chosenResolutions && isInvalidResolutionError(error)) {
+        clearPeriodConflicts();
+        setSubmitError(
+          'Os dias em conflito mudaram. Salve novamente para ver a lista atualizada.',
+        );
+        return;
+      }
+
+      const accessErrorMessage =
+        isEditing && getTripAccessErrorMessage(error, 'alterar');
+
+      if (accessErrorMessage) {
+        setIsAccessDenied(true);
+        setSubmitError(accessErrorMessage);
+        return;
+      }
+
+      if (isInvalidPeriodError(error)) {
+        setErrors((currentErrors) => ({
+          ...currentErrors,
+          endDate: END_BEFORE_START_MESSAGE,
+        }));
+        return;
+      }
+
       setSubmitError(
         isEditing
           ? 'Não foi possível salvar as alterações. Tente novamente.'
@@ -334,6 +422,16 @@ export default function TripForm({
           : 'Escolha as datas para ver a duração.'}
       </p>
 
+      {periodConflicts.length > 0 && (
+        <PeriodConflictResolver
+          conflicts={periodConflicts}
+          duration={days}
+          resolutions={resolutions}
+          onChange={handleResolutionChange}
+          error={resolutionError}
+        />
+      )}
+
       {submitError && (
         <p className="new-trip-field__error" role="alert">
           {submitError}
@@ -352,7 +450,7 @@ export default function TripForm({
         <button
           className="form-button my-trips__primary-button"
           type="submit"
-          disabled={loading}
+          disabled={loading || isAccessDenied}
         >
           {loading ? loadingLabel : submitLabel}
         </button>

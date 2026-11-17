@@ -1,5 +1,6 @@
 // Dados falsos para visualizar a tela de pontos turísticos sem back-end (ativados com VITE_USE_MOCKS=true)
 // Apagar quando a API estiver pronta
+import { ApiError } from './api';
 import type { OpeningHours, Place, PlacesPage } from './placesService';
 
 const PHOTOS_URL = 'https://upload.wikimedia.org/wikipedia/commons/thumb';
@@ -32,6 +33,13 @@ const places: Place[] = [
       altText: 'Estátua do Cristo Redentor no alto do Corcovado',
     },
     openingHours: hours(EVERY_DAY, '08:00', '19:00'),
+    description:
+      'Estátua de Cristo de braços abertos no alto do Morro do Corcovado, com vista para a cidade.',
+    coordinates: { latitude: -22.9519, longitude: -43.2105 },
+    address: 'Parque Nacional da Tijuca, Alto da Boa Vista',
+    estimatedDurationMinutes: 150,
+    cost: 'Ingresso a partir de R$ 75,00',
+    source: 'OpenStreetMap',
   },
   {
     id: '2',
@@ -43,6 +51,12 @@ const places: Place[] = [
       altText: 'Fachada do Museu do Amanhã na Praça Mauá',
     },
     openingHours: hours(TUESDAY_TO_SUNDAY, '10:00', '18:00'),
+    description:
+      'Museu de ciências que explora as possibilidades de construção do futuro a partir das escolhas de hoje.',
+    coordinates: { latitude: -22.8944, longitude: -43.1795 },
+    address: 'Praça Mauá, 1, Centro',
+    estimatedDurationMinutes: 90,
+    source: 'OpenStreetMap',
   },
   {
     id: '3',
@@ -57,6 +71,10 @@ const places: Place[] = [
       ...hours([1, 2, 3, 4, 5], '09:00', '18:00'),
       ...hours([6], '09:00', '17:00'),
     ],
+    coordinates: { latitude: -22.9052, longitude: -43.1768 },
+    address: 'Rua Gonçalves Dias, 32, Centro',
+    estimatedDurationMinutes: 60,
+    source: 'Cadastro do TripShare',
   },
   {
     id: '4',
@@ -79,6 +97,7 @@ const places: Place[] = [
       altText: 'Faixa de areia da Praia de Ipanema',
     },
     openingHours: [],
+    description: 'Praia urbana famosa pelo pôr do sol visto do Arpoador.',
   },
   {
     id: '6',
@@ -136,4 +155,11 @@ export async function mockGetPlaces(
     totalPages,
     last: page >= totalPages - 1,
   };
+}
+
+export async function mockGetPlace(id: string): Promise<Place> {
+  await wait(300);
+  const place = places.find((item) => item.id === id);
+  if (!place) throw new ApiError(404, null);
+  return place;
 }
