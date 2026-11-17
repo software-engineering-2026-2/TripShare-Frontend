@@ -30,7 +30,6 @@ export type CreateTripInput = Omit<Trip, 'id'>;
 
 export type UpdateTripInput = CreateTripInput;
 
-export function getTrips(): Promise<Trip[]> {
 // Campos usados de TripResponse do back-end (dto/TripResponse.java).
 interface TripResponse {
   id: string;
@@ -90,16 +89,28 @@ export async function createTrip(input: CreateTripInput): Promise<Trip> {
   return toTrip(trip);
 }
 
-// O back-end (branch RF-05) espera destinationId, startsOn e endsOn; ajustar o corpo quando os tipos vierem do OpenAPI.
-export function updateTrip(id: string, input: UpdateTripInput): Promise<Trip> {
+// PATCH /trips/{id}: mesmo corpo de POST /trips, com o token do Firebase.
+export async function updateTrip(
+  id: string,
+  input: UpdateTripInput,
+): Promise<Trip> {
   if (USE_MOCKS) return mockUpdateTrip(id, input);
-  return request<Trip>(`/trips/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(input),
-  });
+  const trip = await request<TripResponse>(
+    `/trips/${encodeURIComponent(id)}`,
+    {
+      method: 'PATCH',
+      headers: await authHeaders(),
+      body: JSON.stringify({
+        title: input.title,
+        destinationId: input.destination.id,
+        startsOn: input.startDate,
+        endsOn: input.endDate,
+      }),
+    },
+  );
+  return toTrip(trip);
 }
 
-// Endpoint ainda não confirmado com o back-end.
 // Back-end ainda não expõe busca de destinos: segue usando o mock.
 export function searchDestinations(query: string): Promise<Destination[]> {
   return mockSearchDestinations(query);
