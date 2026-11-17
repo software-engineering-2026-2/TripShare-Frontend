@@ -76,6 +76,22 @@ export function validateUsername(value: string): string | undefined {
     return 'Informe seu nome de usuário.';
   }
 
+  if (value.trim().length > 50) {
+    return 'Nome de usuário deve ter no máximo 50 caracteres.';
+  }
+
+  return undefined;
+}
+
+export function validateName(value: string): string | undefined {
+  if (!value.trim()) {
+    return 'Informe seu nome completo.';
+  }
+
+  if (value.trim().length > 120) {
+    return 'Nome deve ter no máximo 120 caracteres.';
+  }
+
   return undefined;
 }
 
@@ -97,7 +113,11 @@ export function validatePhone(value: string): string | undefined {
   const phone = value.trim();
 
   if (!phone) {
-    return 'Informe seu telefone.';
+    return undefined;
+  }
+
+  if (phone.length > 32) {
+    return 'Telefone deve ter no máximo 32 caracteres.';
   }
 
   if (!PHONE_CHARACTERS_PATTERN.test(phone)) {
