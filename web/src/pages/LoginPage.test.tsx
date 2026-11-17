@@ -44,7 +44,7 @@ describe('LoginPage', () => {
   });
 
   it('redireciona usuário sem cadastro para o formulário de cadastro', async () => {
-    getCurrentUserProfileMock.mockRejectedValue(new ApiError('Não encontrado', 404));
+    getCurrentUserProfileMock.mockRejectedValue(new ApiError(404, null));
     const user = userEvent.setup();
 
     renderLoginPage();
@@ -54,7 +54,7 @@ describe('LoginPage', () => {
   });
 
   it('exibe erro quando não consegue consultar o perfil', async () => {
-    getCurrentUserProfileMock.mockRejectedValue(new ApiError('Erro interno', 500));
+    getCurrentUserProfileMock.mockRejectedValue(new ApiError(500, null));
     const user = userEvent.setup();
 
     renderLoginPage();

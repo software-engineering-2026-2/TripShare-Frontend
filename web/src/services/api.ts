@@ -2,14 +2,13 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 export class ApiError extends Error {
   readonly status: number;
+  readonly body: unknown;
 
-  constructor(
-    message: string,
-    status: number,
-  ) {
-    super(message);
+  constructor(status: number, body: unknown) {
+    super(`Erro ${status} ao chamar a API`);
     this.name = 'ApiError';
     this.status = status;
+    this.body = body;
   }
 }
 
@@ -26,7 +25,15 @@ export async function request<T>(
   });
 
   if (!response.ok) {
-    throw new ApiError(`Erro ${response.status} ao chamar ${path}`, response.status);
+    let body: unknown;
+
+    try {
+      body = await response.json();
+    } catch {
+      body = null;
+    }
+
+    throw new ApiError(response.status, body);
   }
 
   if(response.status === 204){
