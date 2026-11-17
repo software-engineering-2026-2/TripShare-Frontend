@@ -4,6 +4,7 @@ import {
   mockCreateTrip,
   mockGetTrips,
   mockSearchDestinations,
+  mockUpdateTrip,
 } from './tripsMock';
 
 // Remover junto com tripsMock.ts quando o back-end estiver pronto.
@@ -26,6 +27,8 @@ export interface Trip {
 }
 
 export type CreateTripInput = Omit<Trip, 'id'>;
+
+export type UpdateTripInput = CreateTripInput;
 
 // Campos usados de TripResponse do back-end (dto/TripResponse.java).
 interface TripResponse {
@@ -83,6 +86,28 @@ export async function createTrip(input: CreateTripInput): Promise<Trip> {
       endsOn: input.endDate,
     }),
   });
+  return toTrip(trip);
+}
+
+// PATCH /trips/{id}: mesmo corpo de POST /trips, com o token do Firebase.
+export async function updateTrip(
+  id: string,
+  input: UpdateTripInput,
+): Promise<Trip> {
+  if (USE_MOCKS) return mockUpdateTrip(id, input);
+  const trip = await request<TripResponse>(
+    `/trips/${encodeURIComponent(id)}`,
+    {
+      method: 'PATCH',
+      headers: await authHeaders(),
+      body: JSON.stringify({
+        title: input.title,
+        destinationId: input.destination.id,
+        startsOn: input.startDate,
+        endsOn: input.endDate,
+      }),
+    },
+  );
   return toTrip(trip);
 }
 

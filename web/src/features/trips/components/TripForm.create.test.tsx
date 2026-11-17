@@ -2,7 +2,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Destination } from '../../../services/tripsService';
-import NewTripForm from './NewTripForm';
+import TripForm from './TripForm';
 
 afterEach(cleanup);
 
@@ -26,7 +26,7 @@ const parisTx: Destination = {
 };
 
 function renderForm(
-  overrides: Partial<Parameters<typeof NewTripForm>[0]> = {},
+  overrides: Partial<Parameters<typeof TripForm>[0]> = {},
 ) {
   const props = {
     onSubmit: vi.fn().mockResolvedValue(undefined),
@@ -34,7 +34,7 @@ function renderForm(
     onSearchDestinations: vi.fn().mockResolvedValue([lisboa]),
     ...overrides,
   };
-  render(<NewTripForm {...props} />);
+  render(<TripForm {...props} />);
   return { user: userEvent.setup(), props };
 }
 
@@ -52,7 +52,7 @@ function submit(user: ReturnType<typeof userEvent.setup>) {
   return user.click(screen.getByRole('button', { name: 'Criar viagem' }));
 }
 
-describe('NewTripForm', () => {
+describe('TripForm em modo de criação', () => {
   it('exibe erros para todos os campos vazios e não envia', async () => {
     const { user, props } = renderForm();
 

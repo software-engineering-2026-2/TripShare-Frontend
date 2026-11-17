@@ -2,7 +2,12 @@
 // A busca de destinos usa este mock sempre: o back-end ainda não tem rota de destinos,
 // então os ids abaixo precisam existir no banco para o POST /trips funcionar.
 // Vou apagar isso quando a API tiver pronta
-import type { CreateTripInput, Destination, Trip } from './tripsService';
+import type {
+  CreateTripInput,
+  Destination,
+  Trip,
+  UpdateTripInput,
+} from './tripsService';
 
 const destinations: Destination[] = [
   {
@@ -68,6 +73,21 @@ export async function mockCreateTrip(input: CreateTripInput): Promise<Trip> {
   const trip = { ...input, id: String(Date.now()) };
   trips.push(trip);
   return trip;
+}
+
+export async function mockUpdateTrip(
+  id: string,
+  input: UpdateTripInput,
+): Promise<Trip> {
+  await wait(500);
+  const index = trips.findIndex((trip) => trip.id === id);
+
+  if (index === -1) {
+    throw new Error('Viagem não encontrada');
+  }
+
+  trips[index] = { ...input, id };
+  return trips[index];
 }
 
 export async function mockSearchDestinations(

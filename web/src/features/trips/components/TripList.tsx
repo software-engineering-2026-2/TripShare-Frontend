@@ -9,9 +9,14 @@ import {
 interface TripListProps {
   trips: Trip[];
   onNewTrip: () => void;
+  onEditTrip: (trip: Trip) => void;
 }
 
-export default function TripList({ trips, onNewTrip }: TripListProps) {
+export default function TripList({
+  trips,
+  onNewTrip,
+  onEditTrip,
+}: TripListProps) {
   if (trips.length === 0) {
     return (
       <div className="trip-list__empty">
@@ -34,7 +39,17 @@ export default function TripList({ trips, onNewTrip }: TripListProps) {
     <ul className="trip-list">
       {trips.map((trip) => (
         <li className="trip-card" key={trip.id}>
-          <h2 className="trip-card__title">{trip.title}</h2>
+          <div className="trip-card__header">
+            <h2 className="trip-card__title">{trip.title}</h2>
+            <button
+              className="form-button my-trips__secondary-button trip-card__edit-button"
+              type="button"
+              aria-label={`Editar viagem ${trip.title}`}
+              onClick={() => onEditTrip(trip)}
+            >
+              Editar
+            </button>
+          </div>
           <p className="trip-card__info">
             {formatDestination(trip.destination)}
           </p>
