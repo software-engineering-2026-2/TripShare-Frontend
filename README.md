@@ -47,6 +47,66 @@ npm run dev
 
 Abra `http://localhost:5173` no navegador.
 
+### Com dados de demonstração (sem back-end)
+
+Para testar as telas sem subir o back-end, ligue os dados fictícios em `web/.env`:
+
+```
+VITE_USE_MOCKS=true
+```
+
+Reinicie o `npm run dev`, porque o Vite só lê o `.env` ao iniciar. Nesse modo, as telas de viagens e de locais não pedem login:
+
+| Tela | Endereço |
+|---|---|
+| Minhas viagens (criar, editar e excluir) | `http://localhost:5173/minhas-viagens` |
+| Detalhe de uma viagem | `http://localhost:5173/minhas-viagens/1` |
+| Pontos turísticos da viagem | `http://localhost:5173/minhas-viagens/1/explorar` |
+| Detalhes de um local | `http://localhost:5173/locais/1?tripId=1` |
+
+- Viagens de exemplo: `1` e `2`. Locais de exemplo: `1` a `6`.
+- O perfil (`/perfil/...`) continua exigindo login de verdade.
+- Os dados ficam só na memória: o que for criado ou editado some ao recarregar a página.
+- Para voltar a usar o back-end, configure `VITE_USE_MOCKS=false` e reinicie o `npm run dev`.
+
+### Com o back-end local
+
+1. Configure o Firebase (seção abaixo).
+2. Suba o back-end conforme o README do `TripShare-Backend`, com o Docker Desktop aberto.
+3. Em `web/.env`, use `VITE_API_URL=/api`, `VITE_USE_MOCKS=false` e os valores `VITE_FIREBASE_*`.
+4. Rode `npm run dev`. O Vite encaminha `/api` para `http://localhost:8080`.
+
+Se a porta 5432 já estiver ocupada por um PostgreSQL instalado no Windows, o back-end se conecta a ele e falha com erro de senha. Nesse caso, antes de subir o back-end, rode `$env:POSTGRES_PORT = "5433"` no mesmo terminal.
+
+### Configurar o Firebase
+
+O front e o back usam o **mesmo** projeto Firebase. Se as chaves vierem de projetos diferentes, o back-end recusa o login. Para os passos 1 e 2 é preciso ser proprietário ou editor do projeto; se a opção não aparecer, peça acesso a quem criou o projeto.
+
+1. **Configuração pública do front:** no [console do Firebase](https://console.firebase.google.com), abra o projeto do TripShare → ⚙️ **Configurações do projeto** → aba **Geral** → **Seus apps** → app **Web** (`</>`) → **Configuração do SDK** → **Configuração**. Copie os valores para o `web/.env`, sem aspas:
+
+   | Campo no console | Variável em `web/.env` |
+   |---|---|
+   | `apiKey` | `VITE_FIREBASE_API_KEY` |
+   | `authDomain` | `VITE_FIREBASE_AUTH_DOMAIN` |
+   | `projectId` | `VITE_FIREBASE_PROJECT_ID` |
+   | `storageBucket` | `VITE_FIREBASE_STORAGE_BUCKET` |
+   | `messagingSenderId` | `VITE_FIREBASE_MESSAGING_SENDER_ID` |
+   | `appId` | `VITE_FIREBASE_APP_ID` |
+
+2. **Chave privada do back-end:** em ⚙️ **Configurações do projeto** → aba **Contas de serviço** → **Gerar nova chave privada**. Salve o arquivo baixado como `.secrets/firebase.json` na raiz do `TripShare-Backend`. No PowerShell:
+
+   ```powershell
+   cd TripShare-Backend
+   mkdir .secrets
+   Move-Item "$HOME\Downloads\NOME-DO-ARQUIVO.json" .secrets\firebase.json
+   ```
+
+   Esse arquivo dá acesso de administrador ao projeto: nunca envie ao repositório nem ao grupo do time. A pasta `.secrets/` já está no `.gitignore` do back-end.
+
+3. **Métodos de login:** em **Authentication** → **Método de login**, ative **Google** e **E-mail/senha**. Em **Authentication** → **Configurações** → **Domínios autorizados**, confirme que `localhost` está na lista.
+
+A chave da API do Foursquare (`.secrets/foursquare.txt` no back-end) é separada do Firebase. Sem ela, o back-end sobe, mas a busca de locais externos não funciona. Peça a quem fez a integração.
+
 ### Com Docker
 
 Na raiz do repositório:
