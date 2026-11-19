@@ -2,42 +2,13 @@
 
 Interface web do **TripShare**, plataforma para planejar viagens por destino, período, interesses e tempo disponível por dia, organizar atividades, consultar deslocamentos e compartilhar roteiros com a comunidade (votação, avaliação e ranking).
 
-Este repositório contém apenas o front-end. O back-end (Go) fica em repositório separado.
+Este repositório contém apenas o front-end. O backend Java/Spring Boot fica no repositório TripShare-Backend.
 
-## 🎨 Paleta de Cores Oficial — *Copacabana Ocean*
+## Identidade visual — TripShare Coral
 
-A identidade visual oficial do projeto utiliza o tema **Copacabana Ocean**, inspirado na orla e no mar do Rio de Janeiro, combinando tons de azul oceânico com superfícies claras e frescas.
+A cor principal é **`#FF645C`**, acompanhada de branco, grafite, amarelo e verde suave. O visual usa títulos Bricolage Grotesque, texto DM Sans e ilustrações de percursos. As fontes são locais, com licenças em `web/public/fonts/`.
 
-### Tokens Principais (CSS Variables em `app/globals.css`)
-
-| Token | Variável CSS | Hex | Uso Principal |
-| :--- | :--- | :--- | :--- |
-| **Primary** | `--primary` | `#0077B6` | Botões principais, ícones de destaque, links ativos e badges |
-| **Primary Foreground** | `--primary-foreground` | `#FFFFFF` | Texto e ícones sobre elementos `--primary` |
-| **Brand Gradient (From)** | `--brand-from` | `#0096C7` | Início do gradiente de ações de destaque (ex.: *Distribuir Viagem*, *Gerar Roteiro*) |
-| **Brand Gradient (To)** | `--brand-to` | `#023E8A` | Fim do gradiente de ações de destaque |
-| **Background** | `--background` | `#F8FDFF` | Fundo geral das páginas (branco gelo suave) |
-| **Foreground** | `--foreground` | `#0A2540` | Texto principal e títulos (azul-marinho profundo) |
-| **Card / Popover** | `--card` / `--popover` | `#FFFFFF` | Superfície de cartões, modais e popovers |
-| **Secondary / Muted** | `--secondary` / `--muted` | `#EBF5F8` | Fundos secundários, áreas agrupadas e containers sutis |
-| **Muted Foreground** | `--muted-foreground` | `#4A6B82` | Textos de apoio, legendas, horários e metadados |
-| **Accent** | `--accent` | `#E0F0F6` | Estado de hover em botões secundários, menus e itens selecionáveis |
-| **Border** | `--border` | `#D8E8F0` | Divisórias, bordas de cartões e contornos |
-| **Input** | `--input` | `#C5DCE8` | Bordas de campos de formulário e seletores |
-| **Ring** | `--ring` | `#0077B6` | Anel de foco de acessibilidade (`focus-visible`) |
-| **Destructive** | `--destructive` | `#C13515` | Alertas de conflito de horário e ações de exclusão |
-
-### Cores Semânticas dos Turnos do Roteiro
-
-Os turnos do cronograma diário e os pins do mapa mantêm cores semânticas fixas para rápida identificação visual:
-
-| Turno | Horário | Variável CSS | Hex | Texto (`onColor`) |
-| :--- | :--- | :--- | :--- | :--- |
-| **Manhã** | `06:00 – 12:00` | `--color-shift-manha` | `#F5B301` | `#3D2C00` |
-| **Tarde** | `12:00 – 18:00` | `--color-shift-tarde` | `#F2711C` | `#FFFFFF` |
-| **Noite** | `18:00 – 00:00` | `--color-shift-noite` | `#38BDF8` | `#06304A` |
-| **Madrugada** | `00:00 – 06:00` | `--color-shift-madrugada` | `#7C3AED` | `#FFFFFF` |
-
+Os tokens ficam em `web/src/commons/styles/global.css`. Cada tela tem seu CSS em `web/src/pages/<tela>/styles.css`. Consulte o [sistema visual](docs/design-system.md) para cores, composição, movimento e acessibilidade.
 
 ## Tecnologias
 
@@ -76,12 +47,72 @@ npm run dev
 
 Abra `http://localhost:5173` no navegador.
 
+### Com dados de demonstração (sem back-end)
+
+Para testar as telas sem subir o back-end, ligue os dados fictícios em `web/.env`:
+
+```
+VITE_USE_MOCKS=true
+```
+
+Reinicie o `npm run dev`, porque o Vite só lê o `.env` ao iniciar. Nesse modo, as telas de viagens e de locais não pedem login:
+
+| Tela | Endereço |
+|---|---|
+| Minhas viagens (criar, editar e excluir) | `http://localhost:5173/minhas-viagens` |
+| Detalhe de uma viagem | `http://localhost:5173/minhas-viagens/1` |
+| Pontos turísticos da viagem | `http://localhost:5173/minhas-viagens/1/explorar` |
+| Detalhes de um local | `http://localhost:5173/locais/1?tripId=1` |
+
+- Viagens de exemplo: `1` e `2`. Locais de exemplo: `1` a `6`.
+- O perfil (`/perfil/...`) continua exigindo login de verdade.
+- Os dados ficam só na memória: o que for criado ou editado some ao recarregar a página.
+- Para voltar a usar o back-end, configure `VITE_USE_MOCKS=false` e reinicie o `npm run dev`.
+
+### Com o back-end local
+
+1. Configure o Firebase (seção abaixo).
+2. Suba o back-end conforme o README do `TripShare-Backend`, com o Docker Desktop aberto.
+3. Em `web/.env`, use `VITE_API_URL=/api`, `VITE_USE_MOCKS=false` e os valores `VITE_FIREBASE_*`.
+4. Rode `npm run dev`. O Vite encaminha `/api` para `http://localhost:8080`.
+
+Se a porta 5432 já estiver ocupada por um PostgreSQL instalado no Windows, o back-end se conecta a ele e falha com erro de senha. Nesse caso, antes de subir o back-end, rode `$env:POSTGRES_PORT = "5433"` no mesmo terminal.
+
+### Configurar o Firebase
+
+O front e o back usam o **mesmo** projeto Firebase. Se as chaves vierem de projetos diferentes, o back-end recusa o login. Para os passos 1 e 2 é preciso ser proprietário ou editor do projeto; se a opção não aparecer, peça acesso a quem criou o projeto.
+
+1. **Configuração pública do front:** no [console do Firebase](https://console.firebase.google.com), abra o projeto do TripShare → ⚙️ **Configurações do projeto** → aba **Geral** → **Seus apps** → app **Web** (`</>`) → **Configuração do SDK** → **Configuração**. Copie os valores para o `web/.env`, sem aspas:
+
+   | Campo no console | Variável em `web/.env` |
+   |---|---|
+   | `apiKey` | `VITE_FIREBASE_API_KEY` |
+   | `authDomain` | `VITE_FIREBASE_AUTH_DOMAIN` |
+   | `projectId` | `VITE_FIREBASE_PROJECT_ID` |
+   | `storageBucket` | `VITE_FIREBASE_STORAGE_BUCKET` |
+   | `messagingSenderId` | `VITE_FIREBASE_MESSAGING_SENDER_ID` |
+   | `appId` | `VITE_FIREBASE_APP_ID` |
+
+2. **Chave privada do back-end:** em ⚙️ **Configurações do projeto** → aba **Contas de serviço** → **Gerar nova chave privada**. Salve o arquivo baixado como `.secrets/firebase.json` na raiz do `TripShare-Backend`. No PowerShell:
+
+   ```powershell
+   cd TripShare-Backend
+   mkdir .secrets
+   Move-Item "$HOME\Downloads\NOME-DO-ARQUIVO.json" .secrets\firebase.json
+   ```
+
+   Esse arquivo dá acesso de administrador ao projeto: nunca envie ao repositório nem ao grupo do time. A pasta `.secrets/` já está no `.gitignore` do back-end.
+
+3. **Métodos de login:** em **Authentication** → **Método de login**, ative **Google** e **E-mail/senha**. Em **Authentication** → **Configurações** → **Domínios autorizados**, confirme que `localhost` está na lista.
+
+A chave da API do Foursquare (`.secrets/foursquare.txt` no back-end) é separada do Firebase. Sem ela, o back-end sobe, mas a busca de locais externos não funciona. Peça a quem fez a integração.
+
 ### Com Docker
 
 Na raiz do repositório:
 
 ```bash
-docker compose up --build
+docker compose --env-file web/.env up --build
 ```
 
 Abra `http://localhost:3000`. Para parar:
@@ -90,7 +121,7 @@ Abra `http://localhost:3000`. Para parar:
 docker compose down
 ```
 
-> As variáveis `VITE_*` são embutidas no código na hora do **build**. Se mudar algum valor, rode `docker compose up --build` novamente.
+> As variáveis `VITE_*` são embutidas no código na hora do **build**. Se mudar algum valor, execute o mesmo comando novamente para reconstruir a imagem.
 
 ## Variáveis de ambiente
 
@@ -98,7 +129,10 @@ Copie `web/.env.example` para `web/.env` e preencha os valores. O arquivo `.env`
 
 | Variável | Descrição |
 |---|---|
-| `VITE_API_URL` | URL base da API do back-end (padrão de desenvolvimento: `http://localhost:8080`) |
+| `VITE_API_URL` | Base de API no navegador. O padrão `/api` usa o proxy da mesma origem. Uma URL absoluta requer CORS no servidor de destino. |
+| `API_PROXY_TARGET` | Origem da API para o Vite (dev e preview). Padrão `http://localhost:8080`. |
+| `DOCKER_API_PROXY_TARGET` | Origem da API para o Nginx no Compose. Padrão `http://host.docker.internal:8080`. |
+| `VITE_USE_MOCKS` | Use `true` para demonstrar viagens e lugares com dados fictícios. O padrão é `false`. |
 | `VITE_FIREBASE_API_KEY` | Chave de API do projeto Firebase |
 | `VITE_FIREBASE_AUTH_DOMAIN` | Domínio de autenticação do Firebase |
 | `VITE_FIREBASE_PROJECT_ID` | ID do projeto Firebase |
@@ -106,7 +140,10 @@ Copie `web/.env.example` para `web/.env` e preencha os valores. O arquivo `.env`
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | ID do remetente de mensagens |
 | `VITE_FIREBASE_APP_ID` | ID do aplicativo web |
 
-Peça os valores reais a quem configurou o projeto Firebase.
+Peça os valores públicos do aplicativo web a quem configurou o projeto Firebase. No Docker, o Compose passa os valores `VITE_*` como argumentos de build. Os proxies removem `/api` ao encaminhar ao backend e preservam o caminho e a query da operação. Se um `web/.env` antigo ainda aponta diretamente para `http://localhost:8080`, configure `VITE_API_URL=/api` para ativar o proxy.
+
+No modo real, “Minhas Viagens” mostra as respostas da sessão da página, pois o backend ainda não oferece lista nem leitura de viagem por ID. Para criar uma viagem, informe o UUID de um destino cadastrado no ambiente. O seed de demonstração do backend inclui o destino `20000000-0000-0000-0000-000000000001` quando aplicado. O modo de demonstração usa a busca por nome e os destinos fictícios.
+
 
 ## Scripts
 
@@ -124,27 +161,9 @@ Execute dentro da pasta `web`:
 
 ## Estrutura do projeto
 
-```
-TripShare-Frontend/
-├── docker-compose.yaml
-├── README.md
-└── web/
-    ├── Dockerfile
-    ├── nginx.conf
-    ├── .env.example
-    └── src/
-        ├── app/          # Configuração global: providers, rotas e layout base
-        ├── pages/        # Uma tela completa por rota
-        ├── features/     # Código agrupado por área (auth, trips, itineraries, community...)
-        ├── components/   # Componentes visuais genéricos e reutilizáveis
-        ├── services/     # Comunicação com a API do back-end
-        ├── hooks/        # Hooks customizados reutilizáveis
-        └── lib/          # Configuração de bibliotecas e utilitários
-```
+Em `web/src`, cada tela agrupa seus componentes, estilos e testes. As rotas ficam em `routes`, e componentes e layouts compartilhados em `components` e `templates`. Os contratos e operações HTTP ficam em `resources/api`, apoiados por um cliente comum em `resources/client`.
 
-Cada pasta de `src/` tem um `README.md` explicando o que vai nela.
-
-**Regra prática:** se um componente só aparece em uma área específica (por exemplo, o cartão de roteiro do ranking), ele fica dentro de `features/`. Se qualquer tela pode usá-lo (por exemplo, um botão), fica em `components/`.
+Veja onde adicionar código e como usar o cliente na [arquitetura do frontend](docs/frontend-architecture.md).
 
 ## Convenções
 
@@ -155,7 +174,7 @@ Cada pasta de `src/` tem um `README.md` explicando o que vai nela.
 
 ## Integração com o back-end
 
-O contrato da API será descrito em OpenAPI, mantido pelo back-end. Quando o arquivo estiver disponível, os tipos do front serão gerados a partir dele, de modo que mudanças no contrato quebrem a compilação e não a produção.
+As operações de viagens seguem o OpenAPI do backend. Para autenticação e perfis, consulte a documentação complementar daquele repositório. Os tipos TypeScript dos contratos ficam ao lado dos serviços.
 
 ## Status
 

@@ -1,0 +1,236 @@
+.catalog-back {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.catalog-back:hover {
+  text-decoration: underline;
+}
+.tourist-spots__intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2.5rem;
+  border-radius: var(--radius-panel);
+  background: var(--color-sun);
+  gap: 1.5rem;
+}
+.tourist-spots__intro .page-heading h1 {
+  font-size: clamp(2.5rem, 4.5vw, 4rem);
+}
+.tourist-spots__intro .page-heading p {
+  color: var(--color-text);
+}
+.tourist-spots__compass {
+  width: 110px;
+  flex-shrink: 0;
+  color: var(--color-text);
+}
+.tourist-spots__compass svg {
+  display: block;
+  width: 100%;
+}
+.catalog-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.catalog-summary h2 {
+  font-size: 1.35rem;
+  letter-spacing: -0.035em;
+}
+.catalog-summary > span {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+.tourist-spots__status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 2rem;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-panel);
+}
+.place-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+  gap: 1.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.place-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  transition:
+    transform 200ms var(--ease-out),
+    box-shadow 200ms;
+}
+.place-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px -16px #2c293238;
+}
+.place-card:has(.place-card__link:focus-visible) {
+  outline: 3px solid var(--color-link);
+  outline-offset: 4px;
+}
+.place-card__link {
+  color: inherit;
+  text-decoration: none;
+}
+.place-card__link:focus-visible {
+  outline: none;
+}
+.place-card__link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+.place-card__media {
+  position: relative;
+  overflow: hidden;
+}
+.place-card__photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  object-position: center 25%;
+  background: var(--color-mint);
+  transition: transform 400ms var(--ease-out);
+}
+.place-card:hover img.place-card__photo {
+  transform: scale(1.03);
+}
+.place-card__photo--empty {
+  position: relative;
+  overflow: hidden;
+  color: var(--color-text-muted);
+}
+.place-card__photo--empty .journey-art {
+  position: absolute;
+  inset: 0;
+  opacity: 0.6;
+}
+.place-card__photo--empty > span {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  background: var(--color-surface);
+  border-radius: 6px;
+}
+.place-card__open {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  font-size: 1.1rem;
+  box-shadow: 0 2px 12px #2c293215;
+}
+.place-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 1.25rem;
+}
+.place-card__categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.place-card__category {
+  padding: 0.2rem 0.6rem;
+  color: var(--color-link);
+  background: var(--color-surface-accent);
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.place-card__name {
+  font-size: 1.55rem;
+  line-height: 1.12;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+  margin-bottom: 0.3rem;
+}
+.place-card__info {
+  display: flex;
+  gap: 0.75rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+.place-card__label {
+  flex-shrink: 0;
+  min-width: 3.25rem;
+  color: var(--color-text);
+  font-weight: 600;
+}
+.place-list__empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  border: 1px dashed var(--color-border-strong);
+  background: var(--color-surface);
+  border-radius: var(--radius-panel);
+}
+.place-list__empty-title {
+  font: 700 1.5rem/1.2 var(--heading);
+}
+.place-list__empty-text {
+  color: var(--color-text-muted);
+}
+.tourist-spots__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+.tourist-spots__page-info {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+@media (max-width: 760px) {
+  .tourist-spots__intro {
+    padding: 1.75rem 1.5rem;
+  }
+  .tourist-spots__compass {
+    width: 64px;
+  }
+  .tourist-spots__intro .page-heading h1 {
+    font-size: 2.5rem;
+  }
+}
+@media (max-width: 480px) {
+  .tourist-spots__compass {
+    display: none;
+  }
+  .place-list {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,21 @@
+.unavailable-page__content {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  text-align: center;
+  gap: 2rem;
+  min-height: 65svh;
+  padding: 1.5rem;
+}
+.unavailable-page__content .journey-art {
+  width: min(100%, 22rem);
+  border-radius: 50%;
+  background: var(--color-surface-accent);
+  color: var(--color-link);
+}
+.unavailable-page__content .page-heading {
+  justify-content: center;
+}
+.unavailable-page__content .page-heading h1 {
+  max-width: 20ch;
+}
