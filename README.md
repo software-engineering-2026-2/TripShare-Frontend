@@ -1,6 +1,6 @@
 # TripShare Frontend
 
-Interface web do **TripShare**, plataforma para planejar viagens por destino, período, interesses e tempo disponível por dia, organizar atividades, consultar deslocamentos e compartilhar roteiros com a comunidade (votação, avaliação e ranking).
+Interface web do **TripShare**, plataforma para planejar viagens por destino e período e organizar atividades.
 
 Este repositório contém apenas o front-end. O backend Java/Spring Boot fica no repositório TripShare-Backend.
 
