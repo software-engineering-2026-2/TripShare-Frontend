@@ -174,17 +174,14 @@ Veja onde adicionar código e como usar o cliente na [arquitetura do frontend](d
 
 ## Integração com o back-end
 
-As operações de viagens seguem o OpenAPI do backend. Para autenticação e perfis, consulte a documentação complementar daquele repositório. Os tipos TypeScript dos contratos ficam ao lado dos serviços.
+O contrato da API está espelhado localmente em [docs/openapi.yaml](docs/openapi.yaml). Para fluxos de autenticação e sessão, consulte [docs/authentication.md](docs/authentication.md).
 
-## Status
+## Documentação
 
-Projeto em fase de setup (task FE-00).
-
-- [x] Scaffold React com Vite e TypeScript
-- [x] Lint, formatação e ferramentas de teste
-- [x] Estrutura de pastas e READMEs
-- [x] Docker (Dockerfile, Nginx e Compose)
-- [ ] CI (lint, testes, build e Docker)
-- [ ] Firebase
-- [ ] Geração de tipos a partir do OpenAPI
-- [ ] Chamada de teste ao `/health` do back-end
+| Documento | Conteúdo |
+| --- | --- |
+| [Especificação do projeto](docs/especificacao-do-projeto.md) | 15 Requisitos Funcionais do Plano B (`RF-01`–`RF-05`, `RF-08`–`RF-17`). |
+| [Contrato da API (OpenAPI)](docs/openapi.yaml) | Espelho somente-leitura do contrato do backend. |
+| [Arquitetura do frontend](docs/frontend-architecture.md) | Estrutura de pastas, rotas, cliente HTTP e TanStack Query. |
+| [Autenticação](docs/authentication.md) | Cadastro sequencial, compensação, login e sessão Firebase. |
+| [Sistema visual](docs/design-system.md) | Paleta TripShare Coral, tipografia, composição e acessibilidade. |

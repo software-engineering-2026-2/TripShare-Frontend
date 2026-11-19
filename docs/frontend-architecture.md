@@ -21,7 +21,7 @@ Crie `pages/<tela>/index.tsx` e registre a URL em `routes/paths.ts` e no grupo a
 
 ## Onde adicionar uma requisição
 
-1. Consulte `docs/api/` e `docs/openapi.yaml` do TripShare Backend. Autenticação e perfis também estão no README e em `docs/auth.md` do backend.
+1. Consulte o contrato local em [docs/openapi.yaml](openapi.yaml) (espelho do backend). Autenticação e perfis também estão descritos em [docs/authentication.md](authentication.md). Nunca invente rotas, métodos ou campos fora do contrato.
 2. Registre o caminho em `resources/api/paths.ts`, defina o contrato no domínio e mantenha em `services.ts` o método, a entrada e as conversões da resposta.
 3. Use `requestAuthenticated` para que o cliente obtenha o Bearer da sessão confirmada. As operações iniciais de autenticação enviam o token provisório explicitamente pelo mesmo transporte. Veja o [fluxo de autenticação](authentication.md).
 4. Use TanStack Query para dados remotos. Inclua o UID e os parâmetros na chave e repasse o `signal`. Exiba `LoadingState` na primeira carga e `ErrorState` onde houver recuperação possível. Use `ActionButton` para indicar envio e bloquear cliques enquanto a operação estiver pendente.
