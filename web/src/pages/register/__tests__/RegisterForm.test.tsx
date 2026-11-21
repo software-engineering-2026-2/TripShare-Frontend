@@ -270,7 +270,7 @@ describe('RegisterForm', () => {
     });
   });
 
-  it('exibe mensagem do backend no conflito 409 e preserva os dados', async () => {
+  it('exibe conflito no campo de usuário e permite corrigir sem concluir cadastro', async () => {
     registerMock.mockRejectedValue(new ApiError(409, null));
     const user = userEvent.setup();
     renderRegisterForm();
@@ -282,14 +282,28 @@ describe('RegisterForm', () => {
 
     expect(
       await screen.findByText(
-        'Este nome de usuário já está em uso ou esta conta já foi cadastrada.',
+        'Nome de usuário ou e-mail já cadastrado. Escolha outro nome de usuário ou entre na sua conta.',
       ),
     ).toBeInTheDocument();
     expect(screen.getByLabelText('E-mail')).toHaveValue('ana@example.com');
     expect(screen.getByLabelText('Nome de usuário')).toHaveValue('ana');
     expect(screen.getByLabelText('Nome de exibição')).toHaveValue('Ana Silva');
     expect(screen.getByRole('button', { name: 'Cadastrar' })).toBeEnabled();
+    const username = screen.getByLabelText('Nome de usuário');
+    expect(username).toHaveAttribute('aria-invalid', 'true');
+    expect(username).toHaveAttribute('aria-describedby', 'username-error');
+    expect(screen.queryByText('Página Minhas Viagens')).not.toBeInTheDocument();
     expect(toastSuccessMock).not.toHaveBeenCalled();
+    await user.type(username, '2');
+    expect(username).toHaveAttribute('aria-invalid', 'false');
+    expect(
+      screen.queryByText(/Nome de usuário ou e-mail já cadastrado/),
+    ).not.toBeInTheDocument();
+    registerMock.mockResolvedValueOnce(userProfile);
+    await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
+    expect(
+      await screen.findByText('Página Minhas Viagens'),
+    ).toBeInTheDocument();
   });
 
   it('exibe mensagem amigável para erro 400', async () => {

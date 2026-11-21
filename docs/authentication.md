@@ -48,3 +48,9 @@ Na integração isolada, usar Firebase Auth Emulator com backend e PostgreSQL pr
 O cadastro por e-mail e a conclusão do perfil da conta conectada exigem um aceite explícito dos Termos de Uso e da Política de Privacidade. Os links abrem em outra aba, preservando os dados do formulário. Configure `VITE_TERMS_OF_USE_URL` e `VITE_PRIVACY_POLICY_URL` com os documentos oficiais; sem ambos, o cadastro fica bloqueado.
 
 Esta validação é do frontend. O contrato atual de cadastro não recebe data ou versão do aceite; o registro persistente exigido pelo RF depende de implementação no backend e não é realizado pelo checkbox.
+
+## Nome de usuário em uso
+
+Conflitos de cadastro (`409`) aparecem associados ao campo Nome de usuário. O backend atual não distingue conflitos de username, e-mail e UID; por isso a mensagem informa a possibilidade de nome de usuário ou e-mail já cadastrado. Corrigir o nome ou e-mail limpa o aviso e permite nova tentativa.
+
+Não há consulta prévia de disponibilidade. No cadastro por senha, o Firebase cria uma identidade provisória antes da requisição ao backend. Se o cadastro for rejeitado e a consulta confirmar ausência de perfil, o fluxo existente exclui essa identidade recém-criada. Identidades preexistentes (por exemplo, Google) são preservadas, sem criar perfil ou liberar acesso privado. Falhas de rede ou de exclusão mantêm o estado de recuperação em vez de afirmar que a conta foi removida.

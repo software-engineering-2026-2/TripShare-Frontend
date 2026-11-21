@@ -100,10 +100,6 @@ function getSubmitErrorMessage(error: unknown): string {
       return 'Seu perfil está suspenso.';
     }
 
-    if (error.status === 409) {
-      return 'Este nome de usuário já está em uso ou esta conta já foi cadastrada.';
-    }
-
     return 'Não foi possível concluir o cadastro. Tente novamente.';
   }
 
@@ -159,6 +155,12 @@ export default function RegisterForm({
   const policiesAvailable = Boolean(termsUrl && privacyUrl);
   const [errors, setErrors] = useState<RegisterErrors>({});
   const [emailAlreadyRegistered, setEmailAlreadyRegistered] = useState(false);
+  const [usernameConflict, setUsernameConflict] = useState(false);
+  const usernameError =
+    errors.username ||
+    (usernameConflict
+      ? 'Nome de usuário ou e-mail já cadastrado. Escolha outro nome de usuário ou entre na sua conta.'
+      : undefined);
   const navigate = useNavigate();
   const mounted = useMountedRef();
   const registration = useMutation({
@@ -177,6 +179,10 @@ export default function RegisterForm({
     ? 'Não foi possível sair. Tente novamente.'
     : !emailAlreadyRegistered &&
       registration.error &&
+      !(
+        registration.error instanceof ApiError &&
+        registration.error.status === 409
+      ) &&
       getSubmitErrorMessage(registration.error);
 
   function validateField(field: RegisterField, nextValues: RegisterValues) {
@@ -186,6 +192,7 @@ export default function RegisterForm({
   }
 
   function handleChange(field: RegisterField, value: string) {
+    if (field === 'username' || field === 'email') setUsernameConflict(false);
     if (field === 'email') {
       setEmailAlreadyRegistered(false);
     }
@@ -251,12 +258,20 @@ export default function RegisterForm({
 
     exit.reset();
     setEmailAlreadyRegistered(false);
+    setUsernameConflict(false);
     try {
       await registration.mutateAsync();
       if (!mounted.current) return;
       toast.success('Cadastro realizado com sucesso!', { duration: 5000 });
       navigate(routes.trips, { replace: true });
     } catch (error) {
+      if (
+        mounted.current &&
+        error instanceof ApiError &&
+        error.status === 409
+      ) {
+        setUsernameConflict(true);
+      }
       if (
         mounted.current &&
         error instanceof FirebaseError &&
@@ -332,9 +347,9 @@ export default function RegisterForm({
                   placeholder="Escolha um nome de usuário"
                   maxLength={50}
                   required
-                  aria-invalid={Boolean(errors.username)}
+                  aria-invalid={Boolean(usernameError)}
                   aria-describedby={
-                    errors.username ? 'username-error' : undefined
+                    usernameError ? 'username-error' : undefined
                   }
                   value={values.username}
                   onChange={(event) =>
@@ -342,13 +357,13 @@ export default function RegisterForm({
                   }
                   onBlur={() => handleBlur('username')}
                 />
-                {errors.username && (
+                {usernameError && (
                   <p
                     className="register-field__error"
                     id="username-error"
                     role="alert"
                   >
-                    {errors.username}
+                    {usernameError}
                   </p>
                 )}
               </div>

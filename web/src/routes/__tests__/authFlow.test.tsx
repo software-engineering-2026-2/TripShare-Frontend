@@ -276,7 +276,7 @@ describe('fluxo integrado de cadastro e sessão', () => {
       fireEvent.click(screen.getByRole('checkbox'));
     await userEvent.click(screen.getByRole('button', { name: 'Cadastrar' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'nome de usuário já está em uso',
+      'Nome de usuário ou e-mail já cadastrado',
     );
     expect(router.state.location.pathname).toBe(routes.register);
     expect(screen.getByLabelText('E-mail')).toHaveValue('ana@example.com');

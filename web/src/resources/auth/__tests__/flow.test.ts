@@ -319,3 +319,16 @@ it('restaura tentativa incerta após recarregar sem presumir rollback em um 404'
   });
   expect(mocks.remove).not.toHaveBeenCalled();
 });
+
+it('conflito de username não deixa conta nova nem sessão autenticada', async () => {
+  fetchMock
+    .mockResolvedValueOnce(
+      response(409, { status: 409, message: 'User already exists' }),
+    )
+    .mockResolvedValueOnce(response(404));
+  await expect(register()).rejects.toMatchObject({ status: 409 });
+  expect(mocks.remove).toHaveBeenCalledWith(user);
+  expect(mocks.auth.currentUser).toBeNull();
+  expect(store.getAuthSession().status).toBe('disconnected');
+  expect(localStorage.length).toBe(0);
+});
