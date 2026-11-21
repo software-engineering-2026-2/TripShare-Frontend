@@ -4,9 +4,9 @@ Os contratos de autenticação estão no README e em `docs/auth.md` do TripShare
 
 ## Cadastro
 
-1. O formulário valida campos obrigatórios, confirmação de senha e limites de username (50), nome (120) e e-mail (254). Telefones brasileiros são convertidos para E.164; números internacionais nesse formato também são aceitos. A política de senha é consultada pelo SDK Firebase antes de criar a conta.
+1. O formulário valida campos obrigatórios, confirmação de senha e limites de username (50), nome (120) e e-mail (254). A política de senha é consultada pelo SDK Firebase antes de criar a conta.
 2. O Firebase cria a identidade e fornece UID e ID token. E-mail existente é tratado como erro com orientação para entrar, sem login implícito.
-3. `POST /auth/register` recebe Bearer e `{ uuid, username, name, phone?, bio?, hometown? }`. O backend obtém o e-mail do token.
+3. `POST /auth/register` recebe Bearer e o frontend envia `{ uuid, username, name }` no corpo. O backend obtém o e-mail do token.
 4. Apenas após o perfil ser confirmado, o frontend publica a sessão e navega para Minhas Viagens. Até esse momento, nenhuma tela privada ou serviço autenticado pode usar a identidade provisória.
 
 ## Compensação e recuperação

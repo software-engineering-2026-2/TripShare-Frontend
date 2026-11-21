@@ -86,7 +86,7 @@ function renderFlow(path: string = routes.register) {
 function fillNewAccount() {
   for (const [label, value] of [
     ['Nome de usuário', 'ana'],
-    ['Nome completo', 'Ana Silva'],
+    ['Nome de exibição', 'Ana Silva'],
     ['E-mail', 'ana@example.com'],
     ['Senha', 'senha123!'],
     ['Confirmação de senha', 'senha123!'],

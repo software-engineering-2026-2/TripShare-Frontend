@@ -42,10 +42,6 @@
   color: var(--color-danger);
   font-size: 0.8rem;
 }
-.register-field__textarea {
-  min-height: 5.25rem;
-  resize: vertical;
-}
 .register-form > .form-button {
   margin-top: 0.5rem;
 }

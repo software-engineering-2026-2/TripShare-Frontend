@@ -1,9 +1,6 @@
 export interface RegisterProfileInput {
   username: string;
   name: string;
-  phone?: string | null;
-  bio?: string | null;
-  hometown?: string | null;
 }
 
 // Perfil completo do usuário autenticado, retornado por /auth/register,

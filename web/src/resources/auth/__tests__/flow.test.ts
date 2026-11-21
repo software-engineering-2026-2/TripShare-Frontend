@@ -102,11 +102,8 @@ it('não chama o backend quando o Firebase rejeita e-mail já existente nem faz 
   expect(fetchMock).not.toHaveBeenCalled();
   expect(mocks.remove).not.toHaveBeenCalled();
 });
-it('cadastro confirma as duas etapas, normaliza telefone e publica UID, token e perfil', async () => {
-  await service.register('ana@example.com', 'Password123!', {
-    ...profileInput,
-    phone: '(83) 99999-9999',
-  });
+it('cadastro confirma as duas etapas, publica UID, token e perfil', async () => {
+  await service.register('ana@example.com', 'Password123!', profileInput);
   expect(mocks.persistence).toHaveBeenCalledWith(mocks.auth, 'local');
   expect(fetchMock).toHaveBeenCalledWith(
     expect.stringContaining('/auth/register'),
@@ -118,7 +115,6 @@ it('cadastro confirma as duas etapas, normaliza telefone e publica UID, token e 
       },
       body: JSON.stringify({
         ...profileInput,
-        phone: '+5583999999999',
         uuid: user.uid,
       }),
     }),

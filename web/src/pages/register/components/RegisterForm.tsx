@@ -23,7 +23,6 @@ import {
   validateName,
   validatePassword,
   validatePasswordConfirmation,
-  validatePhone,
   validateUsername,
 } from '../../../resources/auth/validation';
 import EmailAlreadyRegisteredNotice from './EmailAlreadyRegisteredNotice';
@@ -32,11 +31,8 @@ type RegisterField =
   | 'username'
   | 'name'
   | 'email'
-  | 'phone'
   | 'password'
-  | 'passwordConfirmation'
-  | 'bio'
-  | 'hometown';
+  | 'passwordConfirmation';
 
 type RegisterValues = Record<RegisterField, string>;
 type RegisterErrors = Partial<Record<RegisterField, string>>;
@@ -45,11 +41,8 @@ const initialValues: RegisterValues = {
   username: '',
   name: '',
   email: '',
-  phone: '',
   password: '',
   passwordConfirmation: '',
-  bio: '',
-  hometown: '',
 };
 
 function getFieldError(
@@ -63,8 +56,6 @@ function getFieldError(
       return validateName(values.name);
     case 'email':
       return validateEmail(values.email);
-    case 'phone':
-      return validatePhone(values.phone);
     case 'password':
       return validatePassword(values.password);
     case 'passwordConfirmation':
@@ -72,9 +63,6 @@ function getFieldError(
         values.passwordConfirmation,
         values.password,
       );
-    case 'bio':
-    case 'hometown':
-      return undefined;
   }
 }
 
@@ -95,28 +83,10 @@ function withFieldError(
 }
 
 function buildProfileInput(values: RegisterValues): RegisterProfileInput {
-  const profile: RegisterProfileInput = {
+  return {
     username: values.username.trim(),
     name: values.name.trim(),
   };
-
-  const phone = values.phone.trim();
-  const bio = values.bio.trim();
-  const hometown = values.hometown.trim();
-
-  if (phone) {
-    profile.phone = phone;
-  }
-
-  if (bio) {
-    profile.bio = bio;
-  }
-
-  if (hometown) {
-    profile.hometown = hometown;
-  }
-
-  return profile;
 }
 
 function getSubmitErrorMessage(error: unknown): string {
@@ -370,7 +340,7 @@ export default function RegisterForm({
 
               <div className="register-field">
                 <label className="register-field__label" htmlFor="name">
-                  Nome completo
+                  Nome de exibição
                 </label>
                 <input
                   className="form-control register-field__input"
@@ -378,7 +348,7 @@ export default function RegisterForm({
                   name="name"
                   type="text"
                   autoComplete="name"
-                  placeholder="Seu nome completo"
+                  placeholder="Seu nome de exibição"
                   maxLength={120}
                   required
                   aria-invalid={Boolean(errors.name)}
@@ -434,37 +404,6 @@ export default function RegisterForm({
                 )}
                 {emailAlreadyRegistered && !errors.email && (
                   <EmailAlreadyRegisteredNotice />
-                )}
-              </div>
-
-              <div className="register-field">
-                <label className="register-field__label" htmlFor="phone">
-                  Telefone (opcional)
-                </label>
-                <input
-                  className="form-control register-field__input"
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  autoComplete="tel"
-                  placeholder="(00) 00000-0000"
-                  maxLength={32}
-                  aria-invalid={Boolean(errors.phone)}
-                  aria-describedby={errors.phone ? 'phone-error' : undefined}
-                  value={values.phone}
-                  onChange={(event) =>
-                    handleChange('phone', event.target.value)
-                  }
-                  onBlur={() => handleBlur('phone')}
-                />
-                {errors.phone && (
-                  <p
-                    className="register-field__error"
-                    id="phone-error"
-                    role="alert"
-                  >
-                    {errors.phone}
-                  </p>
                 )}
               </div>
             </div>
@@ -550,68 +489,6 @@ export default function RegisterForm({
               </div>
             </fieldset>
           )}
-          <fieldset className="register-group">
-            <legend>Perfil opcional</legend>
-            <div className="register-group__fields">
-              <div className="register-field">
-                <label className="register-field__label" htmlFor="bio">
-                  Bio (opcional)
-                </label>
-                <textarea
-                  className="form-control register-field__input register-field__textarea"
-                  id="bio"
-                  name="bio"
-                  rows={3}
-                  autoComplete="off"
-                  placeholder="Conte um pouco sobre você"
-                  aria-invalid={Boolean(errors.bio)}
-                  aria-describedby={errors.bio ? 'bio-error' : undefined}
-                  value={values.bio}
-                  onChange={(event) => handleChange('bio', event.target.value)}
-                />
-                {errors.bio && (
-                  <p
-                    className="register-field__error"
-                    id="bio-error"
-                    role="alert"
-                  >
-                    {errors.bio}
-                  </p>
-                )}
-              </div>
-
-              <div className="register-field">
-                <label className="register-field__label" htmlFor="hometown">
-                  Cidade natal (opcional)
-                </label>
-                <input
-                  className="form-control register-field__input"
-                  id="hometown"
-                  name="hometown"
-                  type="text"
-                  autoComplete="off"
-                  placeholder="Ex.: Campina Grande, PB"
-                  aria-invalid={Boolean(errors.hometown)}
-                  aria-describedby={
-                    errors.hometown ? 'hometown-error' : undefined
-                  }
-                  value={values.hometown}
-                  onChange={(event) =>
-                    handleChange('hometown', event.target.value)
-                  }
-                />
-                {errors.hometown && (
-                  <p
-                    className="register-field__error"
-                    id="hometown-error"
-                    role="alert"
-                  >
-                    {errors.hometown}
-                  </p>
-                )}
-              </div>
-            </div>
-          </fieldset>
         </fieldset>
 
         {submitError && <ErrorState>{submitError}</ErrorState>}
