@@ -42,10 +42,6 @@
   color: var(--color-danger);
   font-size: 0.8rem;
 }
-.register-field__textarea {
-  min-height: 5.25rem;
-  resize: vertical;
-}
 .register-form > .form-button {
   margin-top: 0.5rem;
 }
@@ -57,4 +53,23 @@
   .register-group__fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+.register-consent__control {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+}
+.register-consent__control input {
+  flex: 0 0 auto;
+  accent-color: var(--color-primary);
+}
+.register-consent a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+.register-consent input:focus-visible,
+.register-consent a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
 }

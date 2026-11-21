@@ -23,18 +23,17 @@ function renderNotice() {
 afterEach(cleanup);
 
 describe('EmailAlreadyRegisteredNotice', () => {
-  it.each([
-    ['Entrar', 'Página de login'],
-    ['Esqueci a senha', 'Página de recuperar senha'],
-  ])(
-    'o link "%s" navega sem recarregar a página',
-    async (linkName, destination) => {
-      const user = userEvent.setup();
-      renderNotice();
-
-      await user.click(screen.getByRole('link', { name: linkName }));
-
-      expect(await screen.findByText(destination)).toBeInTheDocument();
-    },
-  );
+  it('orienta o método original e oferece apenas o link de login', async () => {
+    const user = userEvent.setup();
+    renderNotice();
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'mesmo método utilizado na criação da conta: Google ou e-mail e senha',
+    );
+    expect(screen.getAllByRole('link')).toHaveLength(1);
+    expect(
+      screen.queryByRole('link', { name: /Esqueci a senha/i }),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole('link', { name: 'Entrar' }));
+    expect(await screen.findByText('Página de login')).toBeInTheDocument();
+  });
 });

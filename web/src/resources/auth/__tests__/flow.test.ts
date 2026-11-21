@@ -102,11 +102,8 @@ it('não chama o backend quando o Firebase rejeita e-mail já existente nem faz 
   expect(fetchMock).not.toHaveBeenCalled();
   expect(mocks.remove).not.toHaveBeenCalled();
 });
-it('cadastro confirma as duas etapas, normaliza telefone e publica UID, token e perfil', async () => {
-  await service.register('ana@example.com', 'Password123!', {
-    ...profileInput,
-    phone: '(83) 99999-9999',
-  });
+it('cadastro confirma as duas etapas, publica UID, token e perfil', async () => {
+  await service.register('ana@example.com', 'Password123!', profileInput);
   expect(mocks.persistence).toHaveBeenCalledWith(mocks.auth, 'local');
   expect(fetchMock).toHaveBeenCalledWith(
     expect.stringContaining('/auth/register'),
@@ -118,7 +115,6 @@ it('cadastro confirma as duas etapas, normaliza telefone e publica UID, token e 
       },
       body: JSON.stringify({
         ...profileInput,
-        phone: '+5583999999999',
         uuid: user.uid,
       }),
     }),
@@ -322,4 +318,17 @@ it('restaura tentativa incerta após recarregar sem presumir rollback em um 404'
     token: null,
   });
   expect(mocks.remove).not.toHaveBeenCalled();
+});
+
+it('conflito de username não deixa conta nova nem sessão autenticada', async () => {
+  fetchMock
+    .mockResolvedValueOnce(
+      response(409, { status: 409, message: 'User already exists' }),
+    )
+    .mockResolvedValueOnce(response(404));
+  await expect(register()).rejects.toMatchObject({ status: 409 });
+  expect(mocks.remove).toHaveBeenCalledWith(user);
+  expect(mocks.auth.currentUser).toBeNull();
+  expect(store.getAuthSession().status).toBe('disconnected');
+  expect(localStorage.length).toBe(0);
 });

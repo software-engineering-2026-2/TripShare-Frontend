@@ -4,7 +4,6 @@ import {
   validateName,
   validatePassword,
   validatePasswordConfirmation,
-  validatePhone,
   validateUsername,
 } from '../validation';
 
@@ -34,11 +33,11 @@ describe('validateUsername', () => {
 
 describe('validateName', () => {
   it('rejeita nome vazio', () => {
-    expect(validateName('')).toBe('Informe seu nome completo.');
+    expect(validateName('')).toBe('Informe seu nome de exibição.');
   });
 
   it('rejeita nome com apenas espaços', () => {
-    expect(validateName('   ')).toBe('Informe seu nome completo.');
+    expect(validateName('   ')).toBe('Informe seu nome de exibição.');
   });
 
   it('rejeita nome com mais de 120 caracteres', () => {
@@ -75,52 +74,6 @@ describe('validateEmail', () => {
   });
 });
 
-describe('validatePhone', () => {
-  it.each([
-    '(83) 99999-9999',
-    '83999999999',
-    '83 99999 9999',
-    '(83) 3333-3333',
-    '8333333333',
-    '+55 (83) 99999-9999',
-    '+55 83 3333-3333',
-    '+55 (55) 99999-9999',
-    '55999999999',
-    '(11) 3333-3333',
-    '(11) 99999-9999',
-  ])('aceita telefone válido %s', (phone) => {
-    expect(validatePhone(phone)).toBeUndefined();
-  });
-
-  it.each([
-    '(20) 99999-9999',
-    '(23) 99999-9999',
-    '(83) 9999-9999',
-    '8399999999',
-    '(83) 33333-3333',
-    '(83) 29999-9999',
-    '(83) 6333-3333',
-    '(83) 9999-999',
-    '(83) 99999-99999',
-    'telefone',
-    '+55 (20) 99999-9999',
-    '+55 83 9999-9999',
-  ])('rejeita telefone inválido %s', (phone) => {
-    expect(validatePhone(phone)).toBe('Informe um telefone brasileiro válido.');
-  });
-
-  it('aceita telefone vazio, pois o campo é opcional', () => {
-    expect(validatePhone('')).toBeUndefined();
-    expect(validatePhone('   ')).toBeUndefined();
-  });
-
-  it('rejeita telefone com mais de 32 caracteres', () => {
-    expect(validatePhone('1'.repeat(33))).toBe(
-      'Telefone deve ter no máximo 32 caracteres.',
-    );
-  });
-});
-
 describe('validatePassword', () => {
   it('rejeita senha vazia', () => {
     expect(validatePassword('')).toBe('Informe sua senha.');
@@ -149,9 +102,6 @@ describe('validatePasswordConfirmation', () => {
   });
 });
 
-it('aceita telefone internacional E.164 conforme contrato da API', () => {
-  expect(validatePhone('+14155552671')).toBeUndefined();
-});
 it('rejeita e-mail acima do limite aceito pelo backend', () => {
   expect(validateEmail('a'.repeat(250) + '@example.com')).toBeDefined();
 });

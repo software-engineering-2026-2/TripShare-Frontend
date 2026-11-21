@@ -4,9 +4,9 @@ Os contratos de autenticação estão no README e em `docs/auth.md` do TripShare
 
 ## Cadastro
 
-1. O formulário valida campos obrigatórios, confirmação de senha e limites de username (50), nome (120) e e-mail (254). Telefones brasileiros são convertidos para E.164; números internacionais nesse formato também são aceitos. A política de senha é consultada pelo SDK Firebase antes de criar a conta.
+1. O formulário valida campos obrigatórios, confirmação de senha e limites de username (50), nome (120) e e-mail (254). A política de senha é consultada pelo SDK Firebase antes de criar a conta.
 2. O Firebase cria a identidade e fornece UID e ID token. E-mail existente é tratado como erro com orientação para entrar, sem login implícito.
-3. `POST /auth/register` recebe Bearer e `{ uuid, username, name, phone?, bio?, hometown? }`. O backend obtém o e-mail do token.
+3. `POST /auth/register` recebe Bearer e o frontend envia `{ uuid, username, name }` no corpo. O backend obtém o e-mail do token.
 4. Apenas após o perfil ser confirmado, o frontend publica a sessão e navega para Minhas Viagens. Até esse momento, nenhuma tela privada ou serviço autenticado pode usar a identidade provisória.
 
 ## Compensação e recuperação
@@ -42,3 +42,21 @@ Logout e troca de conta invalidam operações anteriores e limpam o cache privad
 Executar em `web`: `npm run lint`, `npm run typecheck`, `npm run test` e `npm run build`. Os testes de serviço cobrem contratos, compensação, recuperação, renovação, concorrência e identidade. Os testes de fluxo combinam router, formulários, provedor de sessão e serviços.
 
 Na integração isolada, usar Firebase Auth Emulator com backend e PostgreSQL próprios. A versão local do emulador não implementa `/v2/passwordPolicy`; somente essa resposta precisa ser simulada no teste. A aplicação mantém a consulta real à política, e as operações de criação, autenticação, exclusão e persistência continuam reais no ambiente de teste.
+
+## Aceite dos documentos legais
+
+O cadastro por e-mail e a conclusão do perfil da conta conectada exigem um aceite explícito dos Termos de Uso e da Política de Privacidade. Os links abrem em outra aba, preservando os dados do formulário. Configure `VITE_TERMS_OF_USE_URL` e `VITE_PRIVACY_POLICY_URL` com os documentos oficiais; sem ambos, o cadastro fica bloqueado.
+
+Esta validação é do frontend. O contrato atual de cadastro não recebe data ou versão do aceite; o registro persistente exigido pelo RF depende de implementação no backend e não é realizado pelo checkbox.
+
+## Nome de usuário em uso
+
+Conflitos de cadastro (`409`) aparecem associados ao campo Nome de usuário. O backend atual não distingue conflitos de username, e-mail e UID; por isso a mensagem informa a possibilidade de nome de usuário ou e-mail já cadastrado. Corrigir o nome ou e-mail limpa o aviso e permite nova tentativa.
+
+Não há consulta prévia de disponibilidade. No cadastro por senha, o Firebase cria uma identidade provisória antes da requisição ao backend. Se o cadastro for rejeitado e a consulta confirmar ausência de perfil, o fluxo existente exclui essa identidade recém-criada. Identidades preexistentes (por exemplo, Google) são preservadas, sem criar perfil ou liberar acesso privado. Falhas de rede ou de exclusão mantêm o estado de recuperação em vez de afirmar que a conta foi removida.
+
+## Recuperação de senha
+
+A rota `/recuperar-senha` usa `sendPasswordResetEmail` do Firebase, sem chamada ao backend e sem alterar a sessão. A confirmação é a mesma para endereços cadastrados e não cadastrados; o erro `auth/user-not-found` também é tratado como confirmação genérica. Falhas operacionais mostram uma mensagem genérica e permitem repetir. O envio depende da configuração Firebase, do provedor de e-mail/senha e do modelo de e-mail/ação configurado no console. A proteção contra enumeração de e-mails deve permanecer habilitada no projeto Firebase.
+
+Contas exclusivamente Google são orientadas a recuperar o acesso pelo Google. O formulário não consulta os provedores de um endereço para evitar revelar sua existência. O envio e o recebimento de mensagens reais precisam ser validados no projeto Firebase configurado.

@@ -126,11 +126,11 @@ describe('navegação e parâmetros', () => {
     expect(getPlacesMock).not.toHaveBeenCalled();
   });
 
-  it('mostra um retorno ao login na recuperação ainda indisponível', async () => {
+  it('mostra o formulário de recuperação e o retorno ao login', async () => {
     renderRoutes(routes.passwordRecovery, { uid: null, ready: true });
     expect(
       await screen.findByRole('heading', {
-        name: 'Recuperação de senha indisponível',
+        name: 'Recuperar senha',
       }),
     ).toBeInTheDocument();
     expect(

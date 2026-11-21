@@ -1,5 +1,6 @@
+import { FirebaseError } from 'firebase/app';
 import { render } from '../../../test/render';
-import { cleanup, fireEvent, screen } from '@testing-library/react';
+import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -57,24 +58,20 @@ function renderRegisterForm(user: User | null = null) {
 
 async function fillValidForm(user: UserEvent) {
   await user.type(screen.getByLabelText('Nome de usuário'), 'ana');
-  await user.type(screen.getByLabelText('Nome completo'), 'Ana Silva');
+  await user.type(screen.getByLabelText('Nome de exibição'), 'Ana Silva');
   await user.type(screen.getByLabelText('E-mail'), 'ana@example.com');
-  await user.type(
-    screen.getByLabelText('Telefone (opcional)'),
-    '(83) 99999-9999',
-  );
   await user.type(screen.getByLabelText('Senha'), 'senha123!');
   await user.type(screen.getByLabelText('Confirmação de senha'), 'senha123!');
-  await user.type(screen.getByLabelText('Bio (opcional)'), 'Gosto de viagens');
-  await user.type(
-    screen.getByLabelText('Cidade natal (opcional)'),
-    'Campina Grande, PB',
-  );
 }
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllEnvs();
+});
 
 beforeEach(() => {
+  vi.stubEnv('VITE_TERMS_OF_USE_URL', 'https://example.com/terms');
+  vi.stubEnv('VITE_PRIVACY_POLICY_URL', 'https://example.com/privacy');
   registerMock.mockReset();
   vi.mocked(completeRegistration).mockReset();
   toastSuccessMock.mockReset();
@@ -90,13 +87,18 @@ describe('RegisterForm', () => {
       displayName: 'Ana Silva',
     } as User);
 
+    expect(screen.queryByLabelText(/telefone/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/bio/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/cidade natal/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Senha')).not.toBeInTheDocument();
     expect(
       screen.queryByLabelText('Confirmação de senha'),
     ).not.toBeInTheDocument();
     expect(screen.getByLabelText('E-mail')).toHaveAttribute('readonly');
-    expect(screen.getByLabelText('Nome completo')).toHaveValue('Ana Silva');
+    expect(screen.getByLabelText('Nome de exibição')).toHaveValue('Ana Silva');
     await user.type(screen.getByLabelText('Nome de usuário'), 'ana');
+    if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+      fireEvent.click(screen.getByRole('checkbox'));
     await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
 
     expect(completeRegistration).toHaveBeenCalledWith('firebase-uid', {
@@ -120,12 +122,16 @@ describe('RegisterForm', () => {
     const user = userEvent.setup();
     renderRegisterForm();
 
+    if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+      fireEvent.click(screen.getByRole('checkbox'));
     await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
 
     expect(
       screen.getByText('Informe seu nome de usuário.'),
     ).toBeInTheDocument();
-    expect(screen.getByText('Informe seu nome completo.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Informe seu nome de exibição.'),
+    ).toBeInTheDocument();
     expect(screen.getByText('Informe seu e-mail.')).toBeInTheDocument();
     expect(screen.getByText('Informe sua senha.')).toBeInTheDocument();
     expect(screen.getByText('Confirme sua senha.')).toBeInTheDocument();
@@ -133,7 +139,6 @@ describe('RegisterForm', () => {
       'aria-invalid',
       'true',
     );
-    expect(screen.queryByText('Informe seu telefone.')).not.toBeInTheDocument();
     expect(registerMock).not.toHaveBeenCalled();
     expect(toastSuccessMock).not.toHaveBeenCalled();
   });
@@ -144,6 +149,8 @@ describe('RegisterForm', () => {
 
     const usernameInput = screen.getByLabelText('Nome de usuário');
     fireEvent.change(usernameInput, { target: { value: 'a'.repeat(51) } });
+    if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+      fireEvent.click(screen.getByRole('checkbox'));
     await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
 
     expect(
@@ -155,8 +162,10 @@ describe('RegisterForm', () => {
     const user = userEvent.setup();
     renderRegisterForm();
 
-    const nameInput = screen.getByLabelText('Nome completo');
+    const nameInput = screen.getByLabelText('Nome de exibição');
     fireEvent.change(nameInput, { target: { value: 'a'.repeat(121) } });
+    if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+      fireEvent.click(screen.getByRole('checkbox'));
     await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
 
     expect(
@@ -170,6 +179,8 @@ describe('RegisterForm', () => {
 
     const emailInput = screen.getByLabelText('E-mail');
     await user.type(emailInput, 'email-invalido');
+    if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+      fireEvent.click(screen.getByRole('checkbox'));
     await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
 
     expect(screen.getByText('Informe um e-mail válido.')).toBeInTheDocument();
@@ -190,11 +201,13 @@ describe('RegisterForm', () => {
     renderRegisterForm();
 
     await user.type(screen.getByLabelText('Nome de usuário'), 'ana');
-    await user.type(screen.getByLabelText('Nome completo'), 'Ana Silva');
+    await user.type(screen.getByLabelText('Nome de exibição'), 'Ana Silva');
     await user.type(screen.getByLabelText('E-mail'), 'ana@example.com');
     await user.type(screen.getByLabelText('Senha'), 'senha');
     const confirmationInput = screen.getByLabelText('Confirmação de senha');
     await user.type(confirmationInput, 'outra');
+    if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+      fireEvent.click(screen.getByRole('checkbox'));
     await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
 
     expect(screen.getByText('As senhas não coincidem.')).toBeInTheDocument();
@@ -209,39 +222,19 @@ describe('RegisterForm', () => {
     expect(confirmationInput).toHaveAttribute('aria-invalid', 'false');
   });
 
-  it('exibe erro de telefone inválido e o remove após a correção', async () => {
-    const user = userEvent.setup();
-    renderRegisterForm();
-
-    const phoneInput = screen.getByLabelText('Telefone (opcional)');
-    await user.type(phoneInput, '(83) 9999-9999');
-    await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
-
-    expect(
-      screen.getByText('Informe um telefone brasileiro válido.'),
-    ).toBeInTheDocument();
-    expect(phoneInput).toHaveAttribute('aria-invalid', 'true');
-
-    await user.clear(phoneInput);
-    await user.type(phoneInput, '(83) 99999-9999');
-
-    expect(
-      screen.queryByText('Informe um telefone brasileiro válido.'),
-    ).not.toBeInTheDocument();
-    expect(phoneInput).toHaveAttribute('aria-invalid', 'false');
-  });
-
   it('envia o perfil e vai direto para minhas viagens, sem voltar ao login', async () => {
     registerMock.mockResolvedValue(userProfile);
     const user = userEvent.setup();
     renderRegisterForm();
 
     await user.type(screen.getByLabelText('Nome de usuário'), 'ana');
-    await user.type(screen.getByLabelText('Nome completo'), 'Ana Silva');
+    await user.type(screen.getByLabelText('Nome de exibição'), 'Ana Silva');
     await user.type(screen.getByLabelText('E-mail'), 'ana@example.com');
     await user.type(screen.getByLabelText('Senha'), 'senha123!');
     await user.type(screen.getByLabelText('Confirmação de senha'), 'senha123!');
 
+    if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+      fireEvent.click(screen.getByRole('checkbox'));
     await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
 
     expect(registerMock).toHaveBeenCalledWith('ana@example.com', 'senha123!', {
@@ -258,43 +251,59 @@ describe('RegisterForm', () => {
     expect(screen.queryByText('Página de login')).not.toBeInTheDocument();
   });
 
-  it('inclui telefone, bio e hometown no payload quando preenchidos', async () => {
+  it('solicita e envia apenas os dados mínimos do perfil', async () => {
     registerMock.mockResolvedValue(userProfile);
     const user = userEvent.setup();
     renderRegisterForm();
 
+    expect(screen.queryByLabelText(/telefone/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/bio/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/cidade natal/i)).not.toBeInTheDocument();
     await fillValidForm(user);
+    if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+      fireEvent.click(screen.getByRole('checkbox'));
     await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
 
     expect(registerMock).toHaveBeenCalledWith('ana@example.com', 'senha123!', {
       username: 'ana',
       name: 'Ana Silva',
-      phone: '(83) 99999-9999',
-      bio: 'Gosto de viagens',
-      hometown: 'Campina Grande, PB',
     });
   });
 
-  it('exibe mensagem do backend no conflito 409 e preserva os dados', async () => {
+  it('exibe conflito no campo de usuário e permite corrigir sem concluir cadastro', async () => {
     registerMock.mockRejectedValue(new ApiError(409, null));
     const user = userEvent.setup();
     renderRegisterForm();
 
     await fillValidForm(user);
+    if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+      fireEvent.click(screen.getByRole('checkbox'));
     await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
 
     expect(
       await screen.findByText(
-        'Este nome de usuário já está em uso ou esta conta já foi cadastrada.',
+        'Nome de usuário ou e-mail já cadastrado. Escolha outro nome de usuário ou entre na sua conta.',
       ),
     ).toBeInTheDocument();
     expect(screen.getByLabelText('E-mail')).toHaveValue('ana@example.com');
     expect(screen.getByLabelText('Nome de usuário')).toHaveValue('ana');
-    expect(screen.getByLabelText('Bio (opcional)')).toHaveValue(
-      'Gosto de viagens',
-    );
+    expect(screen.getByLabelText('Nome de exibição')).toHaveValue('Ana Silva');
     expect(screen.getByRole('button', { name: 'Cadastrar' })).toBeEnabled();
+    const username = screen.getByLabelText('Nome de usuário');
+    expect(username).toHaveAttribute('aria-invalid', 'true');
+    expect(username).toHaveAttribute('aria-describedby', 'username-error');
+    expect(screen.queryByText('Página Minhas Viagens')).not.toBeInTheDocument();
     expect(toastSuccessMock).not.toHaveBeenCalled();
+    await user.type(username, '2');
+    expect(username).toHaveAttribute('aria-invalid', 'false');
+    expect(
+      screen.queryByText(/Nome de usuário ou e-mail já cadastrado/),
+    ).not.toBeInTheDocument();
+    registerMock.mockResolvedValueOnce(userProfile);
+    await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
+    expect(
+      await screen.findByText('Página Minhas Viagens'),
+    ).toBeInTheDocument();
   });
 
   it('exibe mensagem amigável para erro 400', async () => {
@@ -303,6 +312,8 @@ describe('RegisterForm', () => {
     renderRegisterForm();
 
     await fillValidForm(user);
+    if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+      fireEvent.click(screen.getByRole('checkbox'));
     await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
 
     expect(
@@ -318,6 +329,8 @@ describe('RegisterForm', () => {
     renderRegisterForm();
 
     await fillValidForm(user);
+    if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+      fireEvent.click(screen.getByRole('checkbox'));
     await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
 
     expect(
@@ -333,6 +346,8 @@ describe('RegisterForm', () => {
     renderRegisterForm();
 
     await fillValidForm(user);
+    if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+      fireEvent.click(screen.getByRole('checkbox'));
     await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
 
     expect(
@@ -348,6 +363,8 @@ describe('RegisterForm', () => {
     renderRegisterForm();
 
     await fillValidForm(user);
+    if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+      fireEvent.click(screen.getByRole('checkbox'));
     await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
 
     const submitButton = await screen.findByRole('button', {
@@ -359,4 +376,81 @@ describe('RegisterForm', () => {
 
     expect(registerMock).toHaveBeenCalledTimes(1);
   });
+});
+
+it.each([
+  null,
+  {
+    uid: 'firebase-uid',
+    email: 'ana@example.com',
+    displayName: 'Ana Silva',
+  } as User,
+])('bloqueia cadastro sem aceite para conta %j', async (connectedUser) => {
+  const user = userEvent.setup();
+  renderRegisterForm(connectedUser);
+  if (connectedUser) {
+    await user.type(screen.getByLabelText('Nome de usuário'), 'ana');
+  } else {
+    await fillValidForm(user);
+  }
+  expect(screen.getByRole('checkbox')).not.toBeChecked();
+  await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
+  expect(
+    screen.getByText(
+      'Aceite os Termos de Uso e a Política de Privacidade para continuar.',
+    ),
+  ).toBeInTheDocument();
+  expect(registerMock).not.toHaveBeenCalled();
+  expect(completeRegistration).not.toHaveBeenCalled();
+});
+
+it('disponibiliza os dois documentos sem abandonar o formulário', () => {
+  renderRegisterForm();
+  expect(screen.getByRole('link', { name: 'Termos de Uso' })).toHaveAttribute(
+    'href',
+    'https://example.com/terms',
+  );
+  expect(
+    screen.getByRole('link', { name: 'Política de Privacidade' }),
+  ).toHaveAttribute('href', 'https://example.com/privacy');
+  expect(screen.getByRole('link', { name: 'Termos de Uso' })).toHaveAttribute(
+    'target',
+    '_blank',
+  );
+});
+
+it('impede cadastro quando os links legais não estão configurados', async () => {
+  vi.stubEnv('VITE_TERMS_OF_USE_URL', '');
+  renderRegisterForm();
+  await fillValidForm(userEvent.setup());
+  await userEvent.click(screen.getByRole('button', { name: 'Cadastrar' }));
+  expect(screen.getByRole('checkbox')).toBeDisabled();
+  expect(
+    screen.getByText(
+      'Os documentos legais estão indisponíveis. Tente novamente mais tarde.',
+    ),
+  ).toBeInTheDocument();
+  expect(registerMock).not.toHaveBeenCalled();
+});
+
+it('orienta o método original quando o Firebase informa e-mail já cadastrado', async () => {
+  registerMock.mockRejectedValue(
+    new FirebaseError('auth/email-already-in-use', 'Email in use'),
+  );
+  const user = userEvent.setup();
+  renderRegisterForm();
+  await fillValidForm(user);
+  await user.click(screen.getByRole('checkbox'));
+  await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
+  expect(
+    await screen.findByText(/mesmo método utilizado na criação da conta/),
+  ).toBeInTheDocument();
+  expect(
+    within(screen.getByRole('alert')).getByRole('link', { name: 'Entrar' }),
+  ).toHaveAttribute('href', '/login');
+  expect(
+    screen.queryByRole('link', { name: /Esqueci a senha/i }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByLabelText('E-mail')).toHaveValue('ana@example.com');
+  expect(toastSuccessMock).not.toHaveBeenCalled();
 });

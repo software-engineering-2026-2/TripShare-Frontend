@@ -12,13 +12,7 @@ import {
   type User,
 } from 'firebase/auth';
 import { auth } from '../client/firebase';
-import {
-  formatBrazilianPhone,
-  validateEmail,
-  validateName,
-  validatePhone,
-  validateUsername,
-} from './validation';
+import { validateEmail, validateName, validateUsername } from './validation';
 import { ApiError } from '../client/http';
 import { createProfile, loginProfile } from '../api/auth/services';
 import { getAuthSession, publishSession } from './session';
@@ -181,9 +175,7 @@ export async function loginWithGoogle() {
 }
 function validateProfile(profile: RegisterProfileInput) {
   const error =
-    validateUsername(profile.username) ??
-    validateName(profile.name) ??
-    validatePhone(profile.phone ?? '');
+    validateUsername(profile.username) ?? validateName(profile.name);
   if (error) throw new AuthFlowError(error);
 }
 async function registerProfile(
@@ -205,18 +197,11 @@ async function registerProfile(
   assertCurrent(id, user);
   if (newlyCreated) writePending(user.uid, 'uncertain');
   try {
-    const phone = profile.phone?.trim();
     const saved = await createProfile(
       {
-        ...profile,
         username: profile.username.trim(),
         name: profile.name.trim(),
         uuid: user.uid,
-        phone: phone
-          ? /^\+[1-9]\d{1,14}$/.test(phone)
-            ? phone
-            : formatBrazilianPhone(phone)
-          : undefined,
       },
       token,
     );
