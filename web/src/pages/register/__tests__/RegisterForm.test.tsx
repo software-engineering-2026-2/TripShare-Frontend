@@ -1,5 +1,6 @@
+import { FirebaseError } from 'firebase/app';
 import { render } from '../../../test/render';
-import { cleanup, fireEvent, screen } from '@testing-library/react';
+import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -416,4 +417,26 @@ it('impede cadastro quando os links legais não estão configurados', async () =
     ),
   ).toBeInTheDocument();
   expect(registerMock).not.toHaveBeenCalled();
+});
+
+it('orienta o método original quando o Firebase informa e-mail já cadastrado', async () => {
+  registerMock.mockRejectedValue(
+    new FirebaseError('auth/email-already-in-use', 'Email in use'),
+  );
+  const user = userEvent.setup();
+  renderRegisterForm();
+  await fillValidForm(user);
+  await user.click(screen.getByRole('checkbox'));
+  await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
+  expect(
+    await screen.findByText(/mesmo método utilizado na criação da conta/),
+  ).toBeInTheDocument();
+  expect(
+    within(screen.getByRole('alert')).getByRole('link', { name: 'Entrar' }),
+  ).toHaveAttribute('href', '/login');
+  expect(
+    screen.queryByRole('link', { name: /Esqueci a senha/i }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByLabelText('E-mail')).toHaveValue('ana@example.com');
+  expect(toastSuccessMock).not.toHaveBeenCalled();
 });

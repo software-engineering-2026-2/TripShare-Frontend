@@ -175,7 +175,9 @@ export default function RegisterForm({
   const isSubmitting = registration.isPending || exit.isPending;
   const submitError = exit.error
     ? 'Não foi possível sair. Tente novamente.'
-    : registration.error && getSubmitErrorMessage(registration.error);
+    : !emailAlreadyRegistered &&
+      registration.error &&
+      getSubmitErrorMessage(registration.error);
 
   function validateField(field: RegisterField, nextValues: RegisterValues) {
     if (user && ['email', 'password', 'passwordConfirmation'].includes(field))
@@ -248,13 +250,20 @@ export default function RegisterForm({
     }
 
     exit.reset();
+    setEmailAlreadyRegistered(false);
     try {
       await registration.mutateAsync();
       if (!mounted.current) return;
       toast.success('Cadastro realizado com sucesso!', { duration: 5000 });
       navigate(routes.trips, { replace: true });
-    } catch {
-      // O formulário preserva os campos e exibe o erro da mutação.
+    } catch (error) {
+      if (
+        mounted.current &&
+        error instanceof FirebaseError &&
+        error.code === 'auth/email-already-in-use'
+      ) {
+        setEmailAlreadyRegistered(true);
+      }
     }
   }
 
