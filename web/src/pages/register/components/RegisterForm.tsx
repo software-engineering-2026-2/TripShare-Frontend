@@ -28,11 +28,7 @@ import {
 import EmailAlreadyRegisteredNotice from './EmailAlreadyRegisteredNotice';
 
 type RegisterField =
-  | 'username'
-  | 'name'
-  | 'email'
-  | 'password'
-  | 'passwordConfirmation';
+  'username' | 'name' | 'email' | 'password' | 'passwordConfirmation';
 
 type RegisterValues = Record<RegisterField, string>;
 type RegisterErrors = Partial<Record<RegisterField, string>>;
@@ -156,6 +152,11 @@ export default function RegisterForm({
     email: user?.email ?? '',
     name: user?.displayName ?? '',
   }));
+  const [acceptedPolicies, setAcceptedPolicies] = useState(false);
+  const [acceptanceError, setAcceptanceError] = useState(false);
+  const termsUrl = import.meta.env.VITE_TERMS_OF_USE_URL;
+  const privacyUrl = import.meta.env.VITE_PRIVACY_POLICY_URL;
+  const policiesAvailable = Boolean(termsUrl && privacyUrl);
   const [errors, setErrors] = useState<RegisterErrors>({});
   const [emailAlreadyRegistered, setEmailAlreadyRegistered] = useState(false);
   const navigate = useNavigate();
@@ -236,8 +237,13 @@ export default function RegisterForm({
     );
 
     setErrors(nextErrors);
+    setAcceptanceError(!acceptedPolicies);
 
-    if (Object.keys(nextErrors).length > 0) {
+    if (
+      !policiesAvailable ||
+      !acceptedPolicies ||
+      Object.keys(nextErrors).length > 0
+    ) {
       return;
     }
 
@@ -489,6 +495,52 @@ export default function RegisterForm({
               </div>
             </fieldset>
           )}
+          <div className="register-consent">
+            <div className="register-consent__control">
+              <input
+                id="accept-policies"
+                type="checkbox"
+                required
+                checked={acceptedPolicies}
+                disabled={!policiesAvailable}
+                aria-invalid={acceptanceError}
+                aria-describedby={
+                  acceptanceError ? 'accept-policies-error' : undefined
+                }
+                onChange={(event) => {
+                  setAcceptedPolicies(event.target.checked);
+                  setAcceptanceError(false);
+                }}
+              />
+              <label htmlFor="accept-policies">
+                Li e aceito os{' '}
+                <a href={termsUrl} target="_blank" rel="noopener noreferrer">
+                  Termos de Uso
+                </a>{' '}
+                e a{' '}
+                <a href={privacyUrl} target="_blank" rel="noopener noreferrer">
+                  Política de Privacidade
+                </a>
+                .
+              </label>
+            </div>
+            {acceptanceError && (
+              <p
+                id="accept-policies-error"
+                className="register-field__error"
+                role="alert"
+              >
+                Aceite os Termos de Uso e a Política de Privacidade para
+                continuar.
+              </p>
+            )}
+            {!policiesAvailable && (
+              <p className="register-field__error" role="alert">
+                Os documentos legais estão indisponíveis. Tente novamente mais
+                tarde.
+              </p>
+            )}
+          </div>
         </fieldset>
 
         {submitError && <ErrorState>{submitError}</ErrorState>}

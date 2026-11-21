@@ -95,6 +95,8 @@ function fillNewAccount() {
 }
 
 beforeEach(() => {
+  vi.stubEnv('VITE_TERMS_OF_USE_URL', 'https://example.com/terms');
+  vi.stubEnv('VITE_PRIVACY_POLICY_URL', 'https://example.com/privacy');
   vi.resetAllMocks();
   localStorage.clear();
   publishSession('restoring');
@@ -128,6 +130,8 @@ describe('fluxo integrado de cadastro e sessão', () => {
     const { router } = renderFlow();
     await screen.findByLabelText('Nome de usuário');
     fillNewAccount();
+    if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+      fireEvent.click(screen.getByRole('checkbox'));
     await userEvent.click(screen.getByRole('button', { name: 'Cadastrar' }));
     await act(async () => {
       await router.navigate(routes.passwordRecovery);
@@ -153,6 +157,8 @@ describe('fluxo integrado de cadastro e sessão', () => {
     );
     await screen.findByRole('heading', { name: 'Crie sua conta no TripShare' });
     fillNewAccount();
+    if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+      fireEvent.click(screen.getByRole('checkbox'));
     await userEvent.click(screen.getByRole('button', { name: 'Cadastrar' }));
 
     expect(router.state.location.pathname).toBe(routes.register);
@@ -241,6 +247,8 @@ describe('fluxo integrado de cadastro e sessão', () => {
       fireEvent.change(screen.getByLabelText('Nome de usuário'), {
         target: { value: 'ana' },
       });
+      if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+        fireEvent.click(screen.getByRole('checkbox'));
       await userEvent.click(screen.getByRole('button', { name: 'Cadastrar' }));
       await screen.findByRole('heading', { name: 'Minhas Viagens' });
       expect(createUser).not.toHaveBeenCalled();
@@ -264,6 +272,8 @@ describe('fluxo integrado de cadastro e sessão', () => {
     const { router } = renderFlow();
     await screen.findByLabelText('Nome de usuário');
     fillNewAccount();
+    if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+      fireEvent.click(screen.getByRole('checkbox'));
     await userEvent.click(screen.getByRole('button', { name: 'Cadastrar' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'nome de usuário já está em uso',
@@ -273,6 +283,8 @@ describe('fluxo integrado de cadastro e sessão', () => {
     fireEvent.change(screen.getByLabelText('Nome de usuário'), {
       target: { value: 'ana2' },
     });
+    if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+      fireEvent.click(screen.getByRole('checkbox'));
     await userEvent.click(screen.getByRole('button', { name: 'Cadastrar' }));
     await screen.findByRole('heading', { name: 'Minhas Viagens' });
     expect(signIn).not.toHaveBeenCalled();
@@ -283,6 +295,8 @@ describe('fluxo integrado de cadastro e sessão', () => {
     const firstVisit = renderFlow();
     await screen.findByLabelText('Nome de usuário');
     fillNewAccount();
+    if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+      fireEvent.click(screen.getByRole('checkbox'));
     await userEvent.click(screen.getByRole('button', { name: 'Cadastrar' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Falha de conexão',
@@ -300,6 +314,8 @@ describe('fluxo integrado de cadastro e sessão', () => {
     fireEvent.change(screen.getByLabelText('Nome de usuário'), {
       target: { value: 'ana' },
     });
+    if (!(screen.getByRole('checkbox') as HTMLInputElement).checked)
+      fireEvent.click(screen.getByRole('checkbox'));
     await userEvent.click(screen.getByRole('button', { name: 'Cadastrar' }));
     await screen.findByRole('heading', { name: 'Minhas Viagens' });
     expect(createUser).toHaveBeenCalledOnce();

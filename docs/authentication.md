@@ -42,3 +42,9 @@ Logout e troca de conta invalidam operações anteriores e limpam o cache privad
 Executar em `web`: `npm run lint`, `npm run typecheck`, `npm run test` e `npm run build`. Os testes de serviço cobrem contratos, compensação, recuperação, renovação, concorrência e identidade. Os testes de fluxo combinam router, formulários, provedor de sessão e serviços.
 
 Na integração isolada, usar Firebase Auth Emulator com backend e PostgreSQL próprios. A versão local do emulador não implementa `/v2/passwordPolicy`; somente essa resposta precisa ser simulada no teste. A aplicação mantém a consulta real à política, e as operações de criação, autenticação, exclusão e persistência continuam reais no ambiente de teste.
+
+## Aceite dos documentos legais
+
+O cadastro por e-mail e a conclusão do perfil da conta conectada exigem um aceite explícito dos Termos de Uso e da Política de Privacidade. Os links abrem em outra aba, preservando os dados do formulário. Configure `VITE_TERMS_OF_USE_URL` e `VITE_PRIVACY_POLICY_URL` com os documentos oficiais; sem ambos, o cadastro fica bloqueado.
+
+Esta validação é do frontend. O contrato atual de cadastro não recebe data ou versão do aceite; o registro persistente exigido pelo RF depende de implementação no backend e não é realizado pelo checkbox.
