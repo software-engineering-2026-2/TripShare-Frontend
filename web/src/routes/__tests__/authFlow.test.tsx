@@ -137,7 +137,7 @@ describe('fluxo integrado de cadastro e sessão', () => {
       await router.navigate(routes.passwordRecovery);
     });
     await screen.findByRole('heading', {
-      name: 'Recuperação de senha indisponível',
+      name: 'Recuperar senha',
     });
     await act(async () => finish(respond(201, profile)));
     expect(router.state.location.pathname).toBe(routes.passwordRecovery);
